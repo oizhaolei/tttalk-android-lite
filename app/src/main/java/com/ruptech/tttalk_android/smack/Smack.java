@@ -1,24 +1,24 @@
 package com.ruptech.tttalk_android.smack;
 
-import com.ruptech.tttalk_android.exception.XXException;
+import com.ruptech.tttalk_android.exception.XMPPException;
 
 public interface Smack {
-    public boolean login(String account, String password) throws XXException;
+    public boolean login(String account, String password) throws XMPPException;
 
     public boolean logout();
 
     public boolean isAuthenticated();
 
     public void addRosterItem(String user, String alias, String group)
-            throws XXException;
+            throws XMPPException;
 
-    public void removeRosterItem(String user) throws XXException;
+    public void removeRosterItem(String user) throws XMPPException;
 
     public void renameRosterItem(String user, String newName)
-            throws XXException;
+            throws XMPPException;
 
     public void moveRosterItemToGroup(String user, String group)
-            throws XXException;
+            throws XMPPException;
 
     public void renameRosterGroup(String group, String newGroup);
 

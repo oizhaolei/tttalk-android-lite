@@ -24,7 +24,7 @@ import com.ruptech.tttalk_android.fragment.FriendListFragment;
 import com.ruptech.tttalk_android.fragment.RecentChatFragment;
 import com.ruptech.tttalk_android.fragment.SettingsFragment;
 import com.ruptech.tttalk_android.service.IConnectionStatusCallback;
-import com.ruptech.tttalk_android.service.XXService;
+import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.XMPPHelper;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.view.PagerItem;
@@ -64,27 +64,25 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
     @InjectView(R.id.pager)
     ViewPager pager;
     long back_pressed;
-    private XXService mXxService;
+    private TTTalkService mXxService;
     ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mXxService = ((XXService.XXBinder) service).getService();
+            mXxService = ((TTTalkService.XXBinder) service).getService();
             mXxService.registerConnectionStatusCallback(MainActivity.this);
             // 开始连接xmpp服务器
             if (!mXxService.isAuthenticated()) {
-                String usr = PrefUtils.getPrefString(MainActivity.this,
+                String usr = PrefUtils.getPrefString(
                         PrefUtils.ACCOUNT, "");
-                String password = PrefUtils.getPrefString(
-                        MainActivity.this, PrefUtils.PASSWORD, "");
-                mXxService.Login(usr, password);
+                String password = PrefUtils.getPrefString( PrefUtils.PASSWORD, "");
+                mXxService.login(usr, password);
                 // getSupportActionBar().setTitle (R.string.login_prompt_msg);
                 // setStatusImage(false);
                 // mTitleProgressBar.setVisibility(View.VISIBLE);
             } else {
                 getSupportActionBar().setTitle(XMPPHelper
-                        .splitJidAndServer(PrefUtils.getPrefString(
-                                MainActivity.this, PrefUtils.ACCOUNT,
+                        .splitJidAndServer(PrefUtils.getPrefString( PrefUtils.ACCOUNT,
                                 "")));
             }
         }
@@ -113,15 +111,15 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
     @Override
     public void connectionStatusChanged(int connectedState, String reason) {
         switch (connectedState) {
-            case XXService.CONNECTED:
+            case TTTalkService.CONNECTED:
                 getSupportActionBar().setTitle(XMPPHelper.splitJidAndServer(PrefUtils
-                        .getPrefString(MainActivity.this,
+                        .getPrefString(
                                 PrefUtils.ACCOUNT, "")));
                 break;
-            case XXService.CONNECTING:
+            case TTTalkService.CONNECTING:
                 getSupportActionBar().setTitle(R.string.login_prompt_msg);
                 break;
-            case XXService.DISCONNECTED:
+            case TTTalkService.DISCONNECTED:
                 getSupportActionBar().setTitle(R.string.login_prompt_no);
                 break;
 
@@ -156,7 +154,7 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
 
     private void bindXMPPService() {
         Log.i(TAG, "[SERVICE] Unbind");
-        bindService(new Intent(MainActivity.this, XXService.class),
+        bindService(new Intent(MainActivity.this, TTTalkService.class),
                 mServiceConnection, Context.BIND_AUTO_CREATE
                         + Context.BIND_DEBUG_UNBIND);
     }

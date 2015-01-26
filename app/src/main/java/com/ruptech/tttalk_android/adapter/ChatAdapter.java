@@ -108,7 +108,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
                               String from, String message, int delivery_status) {
         holder.avatar.setBackgroundResource(R.drawable.login_default_avatar);
         if (from_me
-                && !PrefUtils.getPrefBoolean(mContext,
+                && !PrefUtils.getPrefBoolean(
                 PrefUtils.SHOW_MY_HEAD, true)) {
             holder.avatar.setVisibility(View.GONE);
         }

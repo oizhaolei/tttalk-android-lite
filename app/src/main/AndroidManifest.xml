@@ -53,7 +53,7 @@
             android:name=".activity.SettingsActivity"
             android:launchMode="singleTop" />
 
-        <service android:name="com.ruptech.tttalk_android.service.XXService" />
+        <service android:name=".service.TTTalkService" />
 
         <receiver android:name="com.ruptech.tttalk_android.XXBroadcastReceiver" >
             <intent-filter>

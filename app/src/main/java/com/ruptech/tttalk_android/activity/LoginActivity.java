@@ -23,7 +23,7 @@ import com.ruptech.tttalk_android.BuildConfig;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.model.User;
 import com.ruptech.tttalk_android.service.IConnectionStatusCallback;
-import com.ruptech.tttalk_android.service.XXService;
+import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 
 import butterknife.ButterKnife;
@@ -45,12 +45,12 @@ public class LoginActivity extends ActionBarActivity implements
     EditText mUsernameView;
     @InjectView(R.id.password)
     EditText mPasswordView;
-    private XXService mXxService;
+    private TTTalkService mXxService;
     ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mXxService = ((XXService.XXBinder) service).getService();
+            mXxService = ((TTTalkService.XXBinder) service).getService();
             mXxService.registerConnectionStatusCallback(LoginActivity.this);
             // 开始连接xmpp服务器
         }
@@ -84,7 +84,7 @@ public class LoginActivity extends ActionBarActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.inject(this);
-        startService(new Intent(LoginActivity.this, XXService.class));
+        startService(new Intent(LoginActivity.this, TTTalkService.class));
         bindXMPPService();
 
         Log.v(TAG, App.properties.getProperty("server.url"));
@@ -173,7 +173,7 @@ public class LoginActivity extends ActionBarActivity implements
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            PrefUtils.setPrefString(this, PrefUtils.Server, server);
+            PrefUtils.setPrefString( PrefUtils.Server, server);
             mAuthTask = new UserLoginTask(username, password);
             mAuthTask.execute((Void) null);
         }
@@ -191,7 +191,7 @@ public class LoginActivity extends ActionBarActivity implements
     public void connectionStatusChanged(int connectedState, String reason) {
         if (progressDialog != null && progressDialog.isShowing())
             progressDialog.dismiss();
-        if (connectedState == XXService.CONNECTED) {
+        if (connectedState == TTTalkService.CONNECTED) {
             //save2Preferences();
             startActivity(new Intent(this, MainActivity.class));
             finish();
@@ -209,7 +209,7 @@ public class LoginActivity extends ActionBarActivity implements
 
     private void bindXMPPService() {
         Log.e(TAG, "[SERVICE] Unbind");
-        Intent mServiceIntent = new Intent(this, XXService.class);
+        Intent mServiceIntent = new Intent(this, TTTalkService.class);
         mServiceIntent.setAction(LOGIN_ACTION);
         bindService(mServiceIntent, mServiceConnection,
                 Context.BIND_AUTO_CREATE + Context.BIND_DEBUG_UNBIND);
@@ -234,7 +234,7 @@ public class LoginActivity extends ActionBarActivity implements
         protected Boolean doInBackground(Void... params) {
             try {
                 if (mXxService != null) {
-                    mXxService.Login(mUsername, mPassword);
+                    mXxService.login(mUsername, mPassword);
                 }
             } catch (Exception e) {
                 return false;

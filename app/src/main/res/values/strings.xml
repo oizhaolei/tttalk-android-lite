@@ -75,7 +75,7 @@
     <string name="auto_save_password">记住密码</string>
     <string name="status_available">在线</string>
     <string name="status_away">离开</string>
-    <string name="status_chat">Open</string>
+    <string name="status_chat">Available</string>
     <string name="status_dnd">请勿打扰</string>
     <string name="status_xa">隐身</string>
     <string name="status_offline">离线</string>

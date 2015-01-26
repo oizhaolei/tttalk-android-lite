@@ -37,7 +37,6 @@ public class PrefUtils {
     public final static String CHAT = "chat";
 
     public final static String JID = "account_jabberID";
-    public final static String CUSTOM_SERVER = "account_customserver";
     public final static String PORT = "account_port";
     public final static String RESSOURCE = "account_resource";
     public final static String PRIORITY = "account_prio";
@@ -59,78 +58,78 @@ public class PrefUtils {
     public final static String STATUS_MESSAGE = "status_message";
     public final static String THEME = "theme";
 
-    public static String getPrefString(Context context, String key,
+    public static String getPrefString(String key,
                                        final String defaultValue) {
         final SharedPreferences settings = PreferenceManager
-                .getDefaultSharedPreferences(context);
+                .getDefaultSharedPreferences(App.mContext);
         return settings.getString(key, defaultValue);
     }
 
-    public static void setPrefString(Context context, final String key,
+    public static void setPrefString(final String key,
                                      final String value) {
         final SharedPreferences settings = PreferenceManager
-                .getDefaultSharedPreferences(context);
+                .getDefaultSharedPreferences(App.mContext);
         settings.edit().putString(key, value).commit();
     }
 
-    public static boolean getPrefBoolean(Context context, final String key,
+    public static boolean getPrefBoolean(final String key,
                                          final boolean defaultValue) {
         final SharedPreferences settings = PreferenceManager
-                .getDefaultSharedPreferences(context);
+                .getDefaultSharedPreferences(App.mContext);
         return settings.getBoolean(key, defaultValue);
     }
 
-    public static boolean hasKey(Context context, final String key) {
-        return PreferenceManager.getDefaultSharedPreferences(context).contains(
+    public static boolean hasKey(final String key) {
+        return PreferenceManager.getDefaultSharedPreferences(App.mContext).contains(
                 key);
     }
 
-    public static void setPrefBoolean(Context context, final String key,
+    public static void setPrefBoolean(final String key,
                                       final boolean value) {
         final SharedPreferences settings = PreferenceManager
-                .getDefaultSharedPreferences(context);
+                .getDefaultSharedPreferences(App.mContext);
         settings.edit().putBoolean(key, value).commit();
     }
 
-    public static void setPrefInt(Context context, final String key,
+    public static void setPrefInt(final String key,
                                   final int value) {
         final SharedPreferences settings = PreferenceManager
-                .getDefaultSharedPreferences(context);
+                .getDefaultSharedPreferences(App.mContext);
         settings.edit().putInt(key, value).commit();
     }
 
-    public static int getPrefInt(Context context, final String key,
+    public static int getPrefInt(final String key,
                                  final int defaultValue) {
         final SharedPreferences settings = PreferenceManager
-                .getDefaultSharedPreferences(context);
+                .getDefaultSharedPreferences(App.mContext);
         return settings.getInt(key, defaultValue);
     }
 
-    public static void setPrefFloat(Context context, final String key,
+    public static void setPrefFloat(final String key,
                                     final float value) {
         final SharedPreferences settings = PreferenceManager
-                .getDefaultSharedPreferences(context);
+                .getDefaultSharedPreferences(App.mContext);
         settings.edit().putFloat(key, value).commit();
     }
 
-    public static float getPrefFloat(Context context, final String key,
+    public static float getPrefFloat(final String key,
                                      final float defaultValue) {
         final SharedPreferences settings = PreferenceManager
-                .getDefaultSharedPreferences(context);
+                .getDefaultSharedPreferences(App.mContext);
         return settings.getFloat(key, defaultValue);
     }
 
-    public static void setSettingLong(Context context, final String key,
+    public static void setSettingLong(final String key,
                                       final long value) {
         final SharedPreferences settings = PreferenceManager
-                .getDefaultSharedPreferences(context);
+                .getDefaultSharedPreferences(App.mContext);
         settings.edit().putLong(key, value).commit();
     }
 
-    public static long getPrefLong(Context context, final String key,
+    public static long getPrefLong(final String key,
                                    final long defaultValue) {
         final SharedPreferences settings = PreferenceManager
-                .getDefaultSharedPreferences(context);
+                .getDefaultSharedPreferences(App.mContext);
         return settings.getLong(key, defaultValue);
     }
 

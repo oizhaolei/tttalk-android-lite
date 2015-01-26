@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
-import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.Vibrator;
@@ -24,7 +23,6 @@ import java.util.Map;
 public abstract class BaseService extends Service {
 
     private static final String TAG = "BaseService";
-    private static final String APP_NAME = "xx";
     private static final int MAX_TICKER_MSG_LEN = 50;
     protected static int SERVICE_NOTIFICATION = 1;
     protected WakeLock mWakeLock;
@@ -32,29 +30,11 @@ public abstract class BaseService extends Service {
     private Notification mNotification;
     private Intent mNotificationIntent;
     private Vibrator mVibrator;
-    private Map<String, Integer> mNotificationCount = new HashMap<String, Integer>(
+    private Map<String, Integer> mNotificationCount = new HashMap<>(
             2);
-    private Map<String, Integer> mNotificationId = new HashMap<String, Integer>(
+    private Map<String, Integer> mNotificationId = new HashMap<>(
             2);
     private int mLastNotificationId = 2;
-
-    @Override
-    public IBinder onBind(Intent arg0) {
-        Log.i(TAG, "called onBind()");
-        return null;
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent) {
-        Log.i(TAG, "called onUnbind()");
-        return super.onUnbind(intent);
-    }
-
-    @Override
-    public void onRebind(Intent intent) {
-        Log.i(TAG, "called onRebind()");
-        super.onRebind(intent);
-    }
 
     @Override
     public void onCreate() {
@@ -62,8 +42,10 @@ public abstract class BaseService extends Service {
         super.onCreate();
         mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         mWakeLock = ((PowerManager) getSystemService(Context.POWER_SERVICE))
-                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, APP_NAME);
-        addNotificationMGR();
+                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getString(R.string.app_name));
+
+        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotificationIntent = new Intent(this, ChatActivity.class);
     }
 
     @Override
@@ -78,10 +60,6 @@ public abstract class BaseService extends Service {
         return START_STICKY;
     }
 
-    private void addNotificationMGR() {
-        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        mNotificationIntent = new Intent(this, ChatActivity.class);
-    }
 
     protected void notifyClient(String fromJid, String fromUserName,
                                 String message, boolean showNotification) {
@@ -103,7 +81,7 @@ public abstract class BaseService extends Service {
 
         // If vibration is set to true, add the vibration flag to
         // the notification and let the system decide.
-        boolean vibraNotify = PrefUtils.getPrefBoolean(this,
+        boolean vibraNotify = PrefUtils.getPrefBoolean(
                 PrefUtils.VIBRATIONNOTIFY, true);
         if (vibraNotify) {
             mVibrator.vibrate(400);
@@ -130,7 +108,7 @@ public abstract class BaseService extends Service {
         }
         String title = author;
         String ticker;
-        boolean isTicker = PrefUtils.getPrefBoolean(this,
+        boolean isTicker = PrefUtils.getPrefBoolean(
                 PrefUtils.TICKER, true);
         if (isTicker) {
             int newline = message.indexOf('\n');
@@ -165,7 +143,7 @@ public abstract class BaseService extends Service {
     }
 
     private void setLEDNotification() {
-        boolean isLEDNotify = PrefUtils.getPrefBoolean(this,
+        boolean isLEDNotify = PrefUtils.getPrefBoolean(
                 PrefUtils.LEDNOTIFY, true);
         if (isLEDNotify) {
             mNotification.ledARGB = Color.MAGENTA;
@@ -186,5 +164,6 @@ public abstract class BaseService extends Service {
             mNotificationManager.cancel(notifyId);
         }
     }
+
 
 }

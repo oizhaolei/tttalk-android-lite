@@ -33,7 +33,7 @@ import com.ruptech.tttalk_android.db.ChatProvider;
 import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
 import com.ruptech.tttalk_android.db.RosterProvider;
 import com.ruptech.tttalk_android.service.IConnectionStatusCallback;
-import com.ruptech.tttalk_android.service.XXService;
+import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.utils.StatusMode;
 import com.ruptech.tttalk_android.utils.XMPPHelper;
@@ -60,20 +60,20 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
     private InputMethodManager mInputMethodManager;
     private String mWithJabberID = null;// 当前聊天用户的ID
     private ContentObserver mContactObserver = new ContactObserver();// 联系人数据监听，主要是监听对方在线状态
-    private XXService mXxService;// Main服务
+    private TTTalkService mXxService;// Main服务
     ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mXxService = ((XXService.XXBinder) service).getService();
+            mXxService = ((TTTalkService.XXBinder) service).getService();
             mXxService.registerConnectionStatusCallback(ChatActivity.this);
             // 如果没有连接上，则重新连接xmpp服务器
             if (!mXxService.isAuthenticated()) {
-                String usr = PrefUtils.getPrefString(ChatActivity.this,
+                String usr = PrefUtils.getPrefString(
                         PrefUtils.ACCOUNT, "");
                 String password = PrefUtils.getPrefString(
-                        ChatActivity.this, PrefUtils.PASSWORD, "");
-                mXxService.Login(usr, password);
+                         PrefUtils.PASSWORD, "");
+                mXxService.login(usr, password);
             }
         }
 
@@ -100,7 +100,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
      * 绑定服务
      */
     private void bindXMPPService() {
-        Intent mServiceIntent = new Intent(this, XXService.class);
+        Intent mServiceIntent = new Intent(this, TTTalkService.class);
         Uri chatURI = Uri.parse(mWithJabberID);
         mServiceIntent.setData(chatURI);
         bindService(mServiceIntent, mServiceConnection, BIND_AUTO_CREATE);

@@ -7,7 +7,7 @@ import android.net.ConnectivityManager;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.ruptech.tttalk_android.service.XXService;
+import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 
 import java.util.ArrayList;
@@ -28,14 +28,14 @@ public class XXBroadcastReceiver extends BroadcastReceiver {
                 }
         } else if (intent.getAction().equals(Intent.ACTION_SHUTDOWN)) {
             Log.d(TAG, "System shutdown, stopping service.");
-            Intent xmppServiceIntent = new Intent(context, XXService.class);
+            Intent xmppServiceIntent = new Intent(context, TTTalkService.class);
             context.stopService(xmppServiceIntent);
         } else {
-            if (!TextUtils.isEmpty(PrefUtils.getPrefString(context,
+            if (!TextUtils.isEmpty(PrefUtils.getPrefString(
                     PrefUtils.PASSWORD, ""))
-                    && PrefUtils.getPrefBoolean(context,
+                    && PrefUtils.getPrefBoolean(
                     PrefUtils.AUTO_START, true)) {
-                Intent i = new Intent(context, XXService.class);
+                Intent i = new Intent(context, TTTalkService.class);
                 i.setAction(BOOT_COMPLETED_ACTION);
                 context.startService(i);
             }

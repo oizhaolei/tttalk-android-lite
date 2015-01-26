@@ -15,14 +15,14 @@ import android.widget.EditText;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.exception.XXAdressMalformedException;
 import com.ruptech.tttalk_android.activity.MainActivity;
-import com.ruptech.tttalk_android.service.XXService;
+import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.XMPPHelper;
 
 public class AddRosterItemDialog extends AlertDialog implements
         DialogInterface.OnClickListener, TextWatcher {
 
     private MainActivity mMainActivity;
-    private XXService mXxService;
+    private TTTalkService mXxService;
 
     private Button okButton;
     private EditText userInputField;
@@ -30,7 +30,7 @@ public class AddRosterItemDialog extends AlertDialog implements
     private GroupNameView mGroupNameView;
 
     public AddRosterItemDialog(MainActivity mainActivity,
-                               XXService service) {
+                               TTTalkService service) {
         super(mainActivity);
         mMainActivity = mainActivity;
         mXxService = service;
@@ -55,7 +55,7 @@ public class AddRosterItemDialog extends AlertDialog implements
     }
 
     public AddRosterItemDialog(MainActivity mainActivity,
-                               XXService service, String jid) {
+                               TTTalkService service, String jid) {
         this(mainActivity, service);
         userInputField.setText(jid);
     }

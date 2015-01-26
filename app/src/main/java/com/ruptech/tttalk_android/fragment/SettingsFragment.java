@@ -116,37 +116,37 @@ public class SettingsFragment extends Fragment implements OnClickListener,
     public void readData() {
         mHeadIcon.setImageResource(R.drawable.login_default_avatar);
         mStatusIcon.setImageResource(MainActivity.mStatusMap
-                .get(PrefUtils.getPrefString(getActivity(),
+                .get(PrefUtils.getPrefString(
                         PrefUtils.STATUS_MODE,
                         PrefUtils.AVAILABLE)));
-        mStatusView.setText(PrefUtils.getPrefString(getActivity(),
+        mStatusView.setText(PrefUtils.getPrefString(
                 PrefUtils.STATUS_MESSAGE,
                 getActivity().getString(R.string.status_available)));
         mNickView
                 .setText(XMPPHelper.splitJidAndServer(PrefUtils
-                        .getPrefString(getActivity(),
+                        .getPrefString(
                                 PrefUtils.ACCOUNT, "")));
         mShowOfflineRosterCheckBox.setChecked(PrefUtils.getPrefBoolean(
-                getActivity(), PrefUtils.SHOW_OFFLINE, true));
+                 PrefUtils.SHOW_OFFLINE, true));
 
         mNotifyRunBackgroundCheckBox.setChecked(PrefUtils.getPrefBoolean(
-                getActivity(), PrefUtils.FOREGROUND, true));
+                 PrefUtils.FOREGROUND, true));
         mNewMsgSoundCheckBox.setChecked(PrefUtils.getPrefBoolean(
-                getActivity(), PrefUtils.SCLIENTNOTIFY, false));
+                 PrefUtils.SCLIENTNOTIFY, false));
         mNewMsgVibratorCheckBox.setChecked(PrefUtils.getPrefBoolean(
-                getActivity(), PrefUtils.VIBRATIONNOTIFY, true));
+                 PrefUtils.VIBRATIONNOTIFY, true));
         mNewMsgLedCheckBox.setChecked(PrefUtils.getPrefBoolean(
-                getActivity(), PrefUtils.LEDNOTIFY, true));
+                 PrefUtils.LEDNOTIFY, true));
         mVisiableNewMsgCheckBox.setChecked(PrefUtils.getPrefBoolean(
-                getActivity(), PrefUtils.TICKER, true));
+                 PrefUtils.TICKER, true));
         mShowHeadCheckBox.setChecked(PrefUtils.getPrefBoolean(
-                getActivity(), PrefUtils.SHOW_MY_HEAD, true));
+                 PrefUtils.SHOW_MY_HEAD, true));
         mConnectionAutoCheckBox.setChecked(PrefUtils.getPrefBoolean(
-                getActivity(), PrefUtils.AUTO_RECONNECT, true));
+                 PrefUtils.AUTO_RECONNECT, true));
         mPoweronReceiverMsgCheckBox.setChecked(PrefUtils.getPrefBoolean(
-                getActivity(), PrefUtils.AUTO_START, true));
+                 PrefUtils.AUTO_START, true));
         mSendCrashCheckBox.setChecked(PrefUtils.getPrefBoolean(
-                getActivity(), PrefUtils.REPORT_CRASH, true));
+                 PrefUtils.REPORT_CRASH, true));
     }
 
     @Override

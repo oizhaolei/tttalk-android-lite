@@ -1,13 +1,8 @@
 package com.ruptech.tttalk_android.smack;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
@@ -17,10 +12,9 @@ import com.ruptech.tttalk_android.db.ChatProvider;
 import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
 import com.ruptech.tttalk_android.db.RosterProvider;
 import com.ruptech.tttalk_android.db.RosterProvider.RosterConstants;
-import com.ruptech.tttalk_android.exception.XXException;
-import com.ruptech.tttalk_android.service.XXService;
-import com.ruptech.tttalk_android.utils.StatusMode;
+import com.ruptech.tttalk_android.exception.XMPPException;
 import com.ruptech.tttalk_android.utils.PrefUtils;
+import com.ruptech.tttalk_android.utils.StatusMode;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
@@ -31,7 +25,6 @@ import org.jivesoftware.smack.RosterGroup;
 import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.PacketTypeFilter;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.IQ.Type;
@@ -60,10 +53,10 @@ import java.util.Collection;
 import java.util.Date;
 
 public class SmackImpl implements Smack {
-    public static final String XMPP_IDENTITY_NAME = "xx";
+    public static final String XMPP_IDENTITY_NAME = "tttalk";
     public static final String XMPP_IDENTITY_TYPE = "phone";
     private static final String TAG = SmackImpl.class.getName();
-    private static final int PACKET_TIMEOUT = 30000;
+    public static final int PACKET_TIMEOUT = 30000;
     final static private String[] SEND_OFFLINE_PROJECTION = new String[]{
             ChatConstants._ID, ChatConstants.JID, ChatConstants.MESSAGE,
             ChatConstants.DATE, ChatConstants.PACKET_ID};
@@ -77,14 +70,11 @@ public class SmackImpl implements Smack {
         registerSmackProviders();
     }
 
-    private static final String PING_ALARM = "com.ruptech.tttalk_android.PING_ALARM";
-    private Intent mPingAlarmIntent = new Intent(PING_ALARM);
-    private static final String PONG_TIMEOUT_ALARM = "com.ruptech.tttalk_android.PONG_TIMEOUT_ALARM";
-    private Intent mPongTimeoutAlarmIntent = new Intent(PONG_TIMEOUT_ALARM);
     private final ContentResolver mContentResolver;
+    private final Context mContext;
     private ConnectionConfiguration mXMPPConfig;
     private XMPPConnection mXMPPConnection;
-    private XXService mService;
+    private SmackListener mSmackListener;
     private Roster mRoster;
     private RosterListener mRosterListener;
     private PacketListener mPacketListener;
@@ -93,33 +83,22 @@ public class SmackImpl implements Smack {
     // ping-pong服务器
     private String mPingID;
     private long mPingTimestamp;
-    private PendingIntent mPingAlarmPendIntent;
-    private PendingIntent mPongTimeoutAlarmPendIntent;
-    private PongTimeoutAlarmReceiver mPongTimeoutAlarmReceiver = new PongTimeoutAlarmReceiver();
-    private BroadcastReceiver mPingAlarmReceiver = new PingAlarmReceiver();
 
-    public SmackImpl(XXService service) {
-        String customServer = PrefUtils.getPrefString(service,
-                PrefUtils.CUSTOM_SERVER, "");
-        int port = PrefUtils.getPrefInt(service,
+    public SmackImpl(Context context, SmackListener listener, ContentResolver contentResolver) {
+        int port = PrefUtils.getPrefInt( 
                 PrefUtils.PORT, PrefUtils.DEFAULT_PORT_INT);
-        String server = PrefUtils.getPrefString(service,
+        String server = PrefUtils.getPrefString( 
                 PrefUtils.Server, PrefUtils.GMAIL_SERVER);
-        boolean smackdebug = PrefUtils.getPrefBoolean(service,
+        boolean smackDebug = PrefUtils.getPrefBoolean( 
                 PrefUtils.SMACKDEBUG, false);
-        boolean requireSsl = PrefUtils.getPrefBoolean(service,
+        boolean requireSsl = PrefUtils.getPrefBoolean( 
                 PrefUtils.REQUIRE_TLS, false);
-        if (customServer.length() > 0
-                || port != PrefUtils.DEFAULT_PORT_INT)
-            this.mXMPPConfig = new ConnectionConfiguration(customServer, port,
-                    server);
-        else
-            this.mXMPPConfig = new ConnectionConfiguration(server); // use SRV
+        this.mXMPPConfig = new ConnectionConfiguration(server, port);
 
         this.mXMPPConfig.setReconnectionAllowed(false);
         this.mXMPPConfig.setSendPresence(false);
         this.mXMPPConfig.setCompressionEnabled(false); // disable for now
-        this.mXMPPConfig.setDebuggerEnabled(smackdebug);
+        this.mXMPPConfig.setDebuggerEnabled(smackDebug);
         this.mXMPPConfig.setSASLAuthenticationEnabled(requireSsl);
         if (requireSsl) {
             this.mXMPPConfig
@@ -129,8 +108,9 @@ public class SmackImpl implements Smack {
                     .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
         }
         this.mXMPPConnection = new XMPPConnection(mXMPPConfig);
-        this.mService = service;
-        mContentResolver = service.getContentResolver();
+        this.mContext = context;
+        this.mSmackListener = listener;
+        mContentResolver = contentResolver;
     }
 
     // ping-pong服务器
@@ -176,7 +156,7 @@ public class SmackImpl implements Smack {
     }
 
     @Override
-    public boolean login(String account, String password) throws XXException {
+    public boolean login(String account, String password) throws XMPPException {
         try {
             if (mXMPPConnection.isConnected()) {
                 try {
@@ -191,11 +171,11 @@ public class SmackImpl implements Smack {
             registerRosterListener();// 监听联系人动态变化
             mXMPPConnection.connect();
             if (!mXMPPConnection.isConnected()) {
-                throw new XXException("SMACK connect failed without exception!");
+                throw new XMPPException("SMACK connect failed without exception!");
             }
             mXMPPConnection.addConnectionListener(new ConnectionListener() {
                 public void connectionClosedOnError(Exception e) {
-                    mService.postConnectionFailed(e.getMessage());
+                    mSmackListener.onConnectionFailed(e.getMessage());
                 }
 
                 public void connectionClosed() {
@@ -213,19 +193,19 @@ public class SmackImpl implements Smack {
             initServiceDiscovery();// 与服务器交互消息监听,发送消息需要回执，判断是否发送成功
             // SMACK auto-logins if we were authenticated before
             if (!mXMPPConnection.isAuthenticated()) {
-                String ressource = PrefUtils.getPrefString(mService,
-                        PrefUtils.RESSOURCE, "XX");
+                String ressource = PrefUtils.getPrefString( 
+                        PrefUtils.RESSOURCE,  XMPP_IDENTITY_NAME);
                 mXMPPConnection.login(account, password, ressource);
             }
             setStatusFromConfig();// 更新在线状态
 
-        } catch (XMPPException e) {
-            throw new XXException(e.getLocalizedMessage(),
+        } catch (org.jivesoftware.smack.XMPPException e) {
+            throw new XMPPException(e.getLocalizedMessage(),
                     e.getWrappedThrowable());
         } catch (Exception e) {
             // actually we just care for IllegalState or NullPointer or XMPPEx.
             Log.e(TAG, "login(): " + Log.getStackTraceString(e));
-            throw new XXException(e.getLocalizedMessage(), e.getCause());
+            throw new XMPPException(e.getLocalizedMessage(), e.getCause());
         }
         registerAllListener();// 注册监听其他的事件，比如新消息
         return mXMPPConnection.isAuthenticated();
@@ -239,13 +219,13 @@ public class SmackImpl implements Smack {
             registerMessageSendFailureListener();
             registerPongListener();
             sendOfflineMessages();
-            if (mService == null) {
+            if (mSmackListener == null) {
                 mXMPPConnection.disconnect();
                 return;
             }
             // we need to "ping" the service to let it know we are actually
             // connected, even when no roster entries will come in
-            mService.rosterChanged();
+            mSmackListener.onRosterChanged();
         }
     }
 
@@ -317,7 +297,7 @@ public class SmackImpl implements Smack {
                         addChatMessageToDB(ChatConstants.INCOMING, fromJID,
                                 chatMessage, ChatConstants.DS_NEW, ts,
                                 msg.getPacketID());
-                        mService.newMessage(fromJID, chatMessage);
+                        mSmackListener.onNewMessage(fromJID, chatMessage);
                     }
                 } catch (Exception e) {
                     // SMACK silently discards exceptions dropped from
@@ -414,7 +394,6 @@ public class SmackImpl implements Smack {
             mXMPPConnection.removePacketListener(mPongListener);
 
         mPongListener = new PacketListener() {
-
             @Override
             public void processPacket(Packet packet) {
                 if (packet == null)
@@ -425,9 +404,7 @@ public class SmackImpl implements Smack {
                             "Ping: server latency %1.3fs",
                             (System.currentTimeMillis() - mPingTimestamp) / 1000.));
                     mPingID = null;
-                    ((AlarmManager) mService
-                            .getSystemService(Context.ALARM_SERVICE))
-                            .cancel(mPongTimeoutAlarmPendIntent);
+                    mSmackListener.unRegisterTimeoutAlarm();
                 }
             }
 
@@ -436,22 +413,7 @@ public class SmackImpl implements Smack {
         mXMPPConnection.addPacketListener(mPongListener, new PacketTypeFilter(
                 IQ.class));
 
-        mPingAlarmPendIntent = PendingIntent.getBroadcast(
-                mService.getApplicationContext(), 0, mPingAlarmIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        mPongTimeoutAlarmPendIntent = PendingIntent.getBroadcast(
-                mService.getApplicationContext(), 0, mPongTimeoutAlarmIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        mService.registerReceiver(mPingAlarmReceiver, new IntentFilter(
-                PING_ALARM));
-        mService.registerReceiver(mPongTimeoutAlarmReceiver, new IntentFilter(
-                PONG_TIMEOUT_ALARM));
-        ((AlarmManager) mService.getSystemService(Context.ALARM_SERVICE))
-                .setInexactRepeating(AlarmManager.RTC_WAKEUP,
-                        System.currentTimeMillis()
-                                + AlarmManager.INTERVAL_FIFTEEN_MINUTES,
-                        AlarmManager.INTERVAL_FIFTEEN_MINUTES,
-                        mPingAlarmPendIntent);
+        mSmackListener.onLogin();
     }
 
     /**
@@ -515,18 +477,18 @@ public class SmackImpl implements Smack {
                 String jabberID = getJabberID(presence.getFrom());
                 RosterEntry rosterEntry = mRoster.getEntry(jabberID);
                 updateRosterEntryInDB(rosterEntry);
-                mService.rosterChanged();
+                mSmackListener.onRosterChanged();
             }
 
             @Override
             public void entriesUpdated(Collection<String> entries) {
-                // TODO Auto-generated method stub
+               
                 Log.i(TAG, "entriesUpdated(" + entries + ")");
                 for (String entry : entries) {
                     RosterEntry rosterEntry = mRoster.getEntry(entry);
                     updateRosterEntryInDB(rosterEntry);
                 }
-                mService.rosterChanged();
+                mSmackListener.onRosterChanged();
             }
 
             @Override
@@ -535,7 +497,7 @@ public class SmackImpl implements Smack {
                 for (String entry : entries) {
                     deleteRosterEntryFromDB(entry);
                 }
-                mService.rosterChanged();
+                mSmackListener.onRosterChanged();
             }
 
             @Override
@@ -550,7 +512,7 @@ public class SmackImpl implements Smack {
                 mContentResolver.bulkInsert(RosterProvider.CONTENT_URI, cvs);
                 if (isFristRoter) {
                     isFristRoter = false;
-                    mService.rosterChanged();
+                    mSmackListener.onRosterChanged();
                 }
             }
         };
@@ -634,14 +596,14 @@ public class SmackImpl implements Smack {
     }
 
     public void setStatusFromConfig() {
-        boolean messageCarbons = PrefUtils.getPrefBoolean(mService,
+        boolean messageCarbons = PrefUtils.getPrefBoolean( 
                 PrefUtils.MESSAGE_CARBONS, true);
-        String statusMode = PrefUtils.getPrefString(mService,
+        String statusMode = PrefUtils.getPrefString( 
                 PrefUtils.STATUS_MODE, PrefUtils.AVAILABLE);
-        String statusMessage = PrefUtils.getPrefString(mService,
+        String statusMessage = PrefUtils.getPrefString( 
                 PrefUtils.STATUS_MESSAGE,
-                mService.getString(R.string.status_online));
-        int priority = PrefUtils.getPrefInt(mService,
+                mContext.getString(R.string.status_online));
+        int priority = PrefUtils.getPrefInt( 
                 PrefUtils.PRIORITY, 0);
         if (messageCarbons)
             CarbonManager.getInstanceFor(mXMPPConnection).sendCarbonsEnabled(
@@ -699,31 +661,31 @@ public class SmackImpl implements Smack {
 
     @Override
     public void addRosterItem(String user, String alias, String group)
-            throws XXException {
-        // TODO Auto-generated method stub
+            throws XMPPException {
+       
         addRosterEntry(user, alias, group);
     }
 
     private void addRosterEntry(String user, String alias, String group)
-            throws XXException {
+            throws XMPPException {
         mRoster = mXMPPConnection.getRoster();
         try {
             mRoster.createEntry(user, alias, new String[]{group});
-        } catch (XMPPException e) {
-            throw new XXException(e.getLocalizedMessage());
+        } catch (org.jivesoftware.smack.XMPPException e) {
+            throw new XMPPException(e.getLocalizedMessage());
         }
     }
 
     @Override
-    public void removeRosterItem(String user) throws XXException {
-        // TODO Auto-generated method stub
+    public void removeRosterItem(String user) throws XMPPException {
+       
         Log.d(TAG, "removeRosterItem(" + user + ")");
 
         removeRosterEntry(user);
-        mService.rosterChanged();
+        mSmackListener.onRosterChanged();
     }
 
-    private void removeRosterEntry(String user) throws XXException {
+    private void removeRosterEntry(String user) throws XMPPException {
         mRoster = mXMPPConnection.getRoster();
         try {
             RosterEntry rosterEntry = mRoster.getEntry(user);
@@ -731,33 +693,33 @@ public class SmackImpl implements Smack {
             if (rosterEntry != null) {
                 mRoster.removeEntry(rosterEntry);
             }
-        } catch (XMPPException e) {
-            throw new XXException(e.getLocalizedMessage());
+        } catch (org.jivesoftware.smack.XMPPException e) {
+            throw new XMPPException(e.getLocalizedMessage());
         }
     }
 
     @Override
     public void renameRosterItem(String user, String newName)
-            throws XXException {
-        // TODO Auto-generated method stub
+            throws XMPPException {
+       
         mRoster = mXMPPConnection.getRoster();
         RosterEntry rosterEntry = mRoster.getEntry(user);
 
         if (!(newName.length() > 0) || (rosterEntry == null)) {
-            throw new XXException("JabberID to rename is invalid!");
+            throw new XMPPException("JabberID to rename is invalid!");
         }
         rosterEntry.setName(newName);
     }
 
     @Override
     public void moveRosterItemToGroup(String user, String group)
-            throws XXException {
-        // TODO Auto-generated method stub
+            throws XMPPException {
+       
         tryToMoveRosterEntryToGroup(user, group);
     }
 
     private void tryToMoveRosterEntryToGroup(String userName, String groupName)
-            throws XXException {
+            throws XMPPException {
 
         mRoster = mXMPPConnection.getRoster();
         RosterGroup rosterGroup = getRosterGroup(groupName);
@@ -770,14 +732,14 @@ public class SmackImpl implements Smack {
         else {
             try {
                 rosterGroup.addEntry(rosterEntry);
-            } catch (XMPPException e) {
-                throw new XXException(e.getLocalizedMessage());
+            } catch (org.jivesoftware.smack.XMPPException e) {
+                throw new XMPPException(e.getLocalizedMessage());
             }
         }
     }
 
     private void removeRosterEntryFromGroups(RosterEntry rosterEntry)
-            throws XXException {
+            throws XMPPException {
         Collection<RosterGroup> oldGroups = rosterEntry.getGroups();
 
         for (RosterGroup group : oldGroups) {
@@ -786,11 +748,11 @@ public class SmackImpl implements Smack {
     }
 
     private void tryToRemoveUserFromGroup(RosterGroup group,
-                                          RosterEntry rosterEntry) throws XXException {
+                                          RosterEntry rosterEntry) throws XMPPException {
         try {
             group.removeEntry(rosterEntry);
-        } catch (XMPPException e) {
-            throw new XXException(e.getLocalizedMessage());
+        } catch (org.jivesoftware.smack.XMPPException e) {
+            throw new XMPPException(e.getLocalizedMessage());
         }
     }
 
@@ -807,7 +769,7 @@ public class SmackImpl implements Smack {
 
     @Override
     public void renameRosterGroup(String group, String newGroup) {
-        // TODO Auto-generated method stub
+       
         Log.i(TAG, "oldgroup=" + group + ", newgroup=" + newGroup);
         mRoster = mXMPPConnection.getRoster();
         RosterGroup groupToRename = mRoster.getGroup(group);
@@ -819,7 +781,7 @@ public class SmackImpl implements Smack {
 
     @Override
     public void requestAuthorizationForRosterItem(String user) {
-        // TODO Auto-generated method stub
+       
         Presence response = new Presence(Presence.Type.subscribe);
         response.setTo(user);
         mXMPPConnection.sendPacket(response);
@@ -827,14 +789,14 @@ public class SmackImpl implements Smack {
 
     @Override
     public void addRosterGroup(String group) {
-        // TODO Auto-generated method stub
+       
         mRoster = mXMPPConnection.getRoster();
         mRoster.createGroup(group);
     }
 
     @Override
     public void sendMessage(String toJID, String message) {
-        // TODO Auto-generated method stub
+       
         final Message newMessage = new Message(toJID, Message.Type.chat);
         newMessage.setBody(message);
         newMessage.addExtension(new DeliveryReceiptRequest());
@@ -859,17 +821,14 @@ public class SmackImpl implements Smack {
         }
         Ping ping = new Ping();
         ping.setType(Type.GET);
-        ping.setTo(PrefUtils.getPrefString(mService,
+        ping.setTo(PrefUtils.getPrefString( 
                 PrefUtils.Server, PrefUtils.GMAIL_SERVER));
         mPingID = ping.getPacketID();
         mPingTimestamp = System.currentTimeMillis();
         Log.d(TAG, "Ping: sending ping " + mPingID);
         mXMPPConnection.sendPacket(ping);
 
-        // register ping timeout handler: PACKET_TIMEOUT(30s) + 3s
-        ((AlarmManager) mService.getSystemService(Context.ALARM_SERVICE)).set(
-                AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
-                        + PACKET_TIMEOUT + 3000, mPongTimeoutAlarmPendIntent);
+        mSmackListener.registerTimeoutAlarm();
     }
 
     @Override
@@ -893,12 +852,8 @@ public class SmackImpl implements Smack {
             mXMPPConnection
                     .removePacketSendFailureListener(mSendFailureListener);
             mXMPPConnection.removePacketListener(mPongListener);
-            ((AlarmManager) mService.getSystemService(Context.ALARM_SERVICE))
-                    .cancel(mPingAlarmPendIntent);
-            ((AlarmManager) mService.getSystemService(Context.ALARM_SERVICE))
-                    .cancel(mPongTimeoutAlarmPendIntent);
-            mService.unregisterReceiver(mPingAlarmReceiver);
-            mService.unregisterReceiver(mPongTimeoutAlarmReceiver);
+
+            mSmackListener.onLogout();
         } catch (Exception e) {
             // ignore it!
             return false;
@@ -914,7 +869,7 @@ public class SmackImpl implements Smack {
             }.start();
         }
         setStatusOffline();
-        this.mService = null;
+        this.mSmackListener = null;
         return true;
     }
 
@@ -924,26 +879,4 @@ public class SmackImpl implements Smack {
         mContentResolver.update(RosterProvider.CONTENT_URI, values, null, null);
     }
 
-    /**
-     * BroadcastReceiver to trigger reconnect on pong timeout.
-     */
-    private class PongTimeoutAlarmReceiver extends BroadcastReceiver {
-        public void onReceive(Context ctx, Intent i) {
-            Log.d(TAG, "Ping: timeout for " + mPingID);
-            mService.postConnectionFailed(XXService.PONG_TIMEOUT);
-            logout();// 超时就断开连接
-        }
-    }
-
-    /**
-     * BroadcastReceiver to trigger sending pings to the server
-     */
-    private class PingAlarmReceiver extends BroadcastReceiver {
-        public void onReceive(Context ctx, Intent i) {
-            if (mXMPPConnection.isAuthenticated()) {
-                sendServerPing();
-            } else
-                Log.d(TAG, "Ping: alarm received, but not connected to server.");
-        }
-    }
 }
