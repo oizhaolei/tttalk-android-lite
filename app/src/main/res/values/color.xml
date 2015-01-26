@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="readonly_background_color">#f0f0f0</color>
+    <color name="field_title_color">#000000</color>
+    <color name="editor_normal_color">#e0e0e0</color>
+    <color name="editor_pressed_color">#888888</color>
+    <color name="toolbar_background_color">#ffff9200</color>
+    <color name="tab_primary_color">#ffe66300</color>
+    <color name="tab_accent_color">#ffc400</color>
+
+    <color name="sidebar_item_background_activated_dark">#ff4c365d</color>
+    <color name="text_white">#ffffffff</color>
+    <color name="color_hei">#ff000000</color>
+    <color name="color_hei_8">#00000000</color>
+    <color name="color_bai">#ffffffff</color>
+    <color name="color_bai_8">#ffffffff</color>
+    <color name="window_bg">#00eef1f3</color>
+    <color name="transparent">@color/color_hei_8</color>
+    <color name="chat_time">@color/color_bai</color>
+    <color name="white">#ffffffff</color>
+    <color name="black">@color/color_hei</color>
+    <color name="thirty_transparent_black">#4d000000</color>
+    <color name="sc_gray">#ff777777</color>
+    <color name="tag_textview2">#ff4a7928</color>
+    <color name="tag_textview3">#ff284479</color>
+    <color name="link_color">#ff13679d</color>
+    <color name="info_card_qzonepic_default">#ffdedede</color>
+    <color name="action_sheet_point">#ff5f6268</color>
+    <color name="action_sheet_curr_point">#ff9fa1a4</color>
+    <color name="setting_aio_text_size_normal">#ff151617</color>
+    <color name="chat_bubble_btn_text">#ffa86700</color>
+    <color name="custom_theme_color">#66000000</color>
+    <color name="gray">#ff777777</color>
+    <color name="button_reply_normal">#ffffffff</color>
+    <color name="qzone_feeditem_sel">#fff1f1f1</color>
+    <color name="qzone_feeditem_nor">#fffafafa</color>
+
+    <drawable name="trans">@color/color_hei_8</drawable>
+
+    <item name="preview_btn_bg_press" type="drawable">#ff000000</item>
+</resources>
