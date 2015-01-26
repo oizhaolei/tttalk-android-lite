@@ -7,9 +7,10 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
-import com.ruptech.tttalk_android.http.HttpServer;
 import com.ruptech.tttalk_android.activity.MainActivity;
+import com.ruptech.tttalk_android.http.HttpServer;
 import com.ruptech.tttalk_android.model.User;
+import com.ruptech.tttalk_android.smack.Smack;
 import com.ruptech.tttalk_android.utils.AssetsPropertyReader;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 
@@ -25,6 +26,7 @@ public class App extends Application implements
     static public Properties properties;
     public static Context mContext;
     public static NotificationManager notificationManager;
+    public static Smack mSmack;
     private static HttpServer httpServer;
     private static User user;
 

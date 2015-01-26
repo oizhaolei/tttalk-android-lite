@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Handler;
@@ -17,22 +18,25 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.ruptech.tttalk_android.activity.LoginActivity;
+import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.XXBroadcastReceiver;
 import com.ruptech.tttalk_android.XXBroadcastReceiver.EventHandler;
-import com.ruptech.tttalk_android.exception.XMPPException;
+import com.ruptech.tttalk_android.activity.LoginActivity;
 import com.ruptech.tttalk_android.activity.MainActivity;
+import com.ruptech.tttalk_android.db.RosterProvider;
+import com.ruptech.tttalk_android.exception.XMPPException;
 import com.ruptech.tttalk_android.smack.Smack;
 import com.ruptech.tttalk_android.smack.SmackImpl;
 import com.ruptech.tttalk_android.smack.SmackListener;
 import com.ruptech.tttalk_android.utils.NetUtil;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-public class TTTalkService extends BaseService implements SmackListener, EventHandler{
+public class TTTalkService extends BaseService implements SmackListener, EventHandler {
     public static final int CONNECTED = 0;
     public static final int DISCONNECTED = -1;
     // private boolean mIsNeedReConnection = false; // 是否需要重连
@@ -50,9 +54,14 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
     private static final int RECONNECT_MAXIMUM = 10 * 60;// 最大重连时间间隔
     private static final String RECONNECT_ALARM = "com.ruptech.tttalk_android.RECONNECT_ALARM";
     private Intent mAlarmIntent = new Intent(RECONNECT_ALARM);
+    private static final String PING_ALARM = "com.ruptech.tttalk_android.PING_ALARM";
+    private Intent mPingAlarmIntent = new Intent(PING_ALARM);
+    private static final String PONG_TIMEOUT_ALARM = "com.ruptech.tttalk_android.PONG_TIMEOUT_ALARM";
+    private Intent mPongTimeoutAlarmIntent = new Intent(PONG_TIMEOUT_ALARM);
+    private static final String[] GROUPS_QUERY = new String[]{
+            RosterProvider.RosterConstants._ID, RosterProvider.RosterConstants.GROUP,};
     private IBinder mBinder = new XXBinder();
     private IConnectionStatusCallback mConnectionStatusCallback;
-    private Smack mSmackable;
     private Thread mConnectingThread;
     private Handler mMainHandler = new Handler();
     private boolean mIsFirstLoginAction;
@@ -62,6 +71,10 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
     private ActivityManager mActivityManager;
     private String mPackageName;
     private HashSet<String> mIsBoundTo = new HashSet<String>();
+    private PendingIntent mPingAlarmPendIntent;
+    private PendingIntent mPongTimeoutAlarmPendIntent;
+    private PongTimeoutAlarmReceiver mPongTimeoutAlarmReceiver = new PongTimeoutAlarmReceiver();
+    private BroadcastReceiver mPingAlarmReceiver = new PingAlarmReceiver();
 
     /**
      * 注册注解面和聊天界面时连接状态变化回调
@@ -101,12 +114,7 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
             mIsBoundTo.add(chatPartner);
         }
         String action = intent.getAction();
-        if (!TextUtils.isEmpty(action)
-                && TextUtils.equals(action, LoginActivity.LOGIN_ACTION)) {
-            mIsFirstLoginAction = true;
-        } else {
-            mIsFirstLoginAction = false;
-        }
+        mIsFirstLoginAction = TextUtils.equals(action, LoginActivity.LOGIN_ACTION);
     }
 
     @Override
@@ -174,8 +182,8 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
             public void run() {
                 try {
                     postConnecting();
-                    mSmackable = new SmackImpl(TTTalkService.this, TTTalkService.this, getContentResolver());
-                    if (mSmackable.login(account, password)) {
+                    App.mSmack = createSmack();
+                    if (App.mSmack.login(account, password)) {
                         // 登陆成功
                         postConnectionScuessed();
                     } else {
@@ -189,7 +197,7 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
                         message += "\n" + e.getCause().getLocalizedMessage();
                     onConnectionFailed(message);
                     Log.i(TAG, "YaximXMPPException in doConnect():");
-                    e.printStackTrace();
+                    Log.e(TAG, e.getMessage(), e);
                 } finally {
                     if (mConnectingThread != null)
                         synchronized (mConnectingThread) {
@@ -218,9 +226,9 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
                 }
             }
         }
-        if (mSmackable != null) {
-            isLogout = mSmackable.logout();
-            mSmackable = null;
+        if (App.mSmack != null) {
+            isLogout = App.mSmack.logout();
+            App.mSmack = null;
         }
         connectionFailed(LOGOUT);// 手动退出
         return isLogout;
@@ -228,16 +236,16 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
 
     // 发送消息
     public void sendMessage(String user, String message) {
-        if (mSmackable != null)
-            mSmackable.sendMessage(user, message);
+        if (App.mSmack != null)
+            App.mSmack.sendMessage(user, message);
         else
             SmackImpl.sendOfflineMessage(getContentResolver(), user, message);
     }
 
     // 是否连接上服务器
     public boolean isAuthenticated() {
-        if (mSmackable != null) {
-            return mSmackable.isAuthenticated();
+        if (App.mSmack != null) {
+            return App.mSmack.isAuthenticated();
         }
 
         return false;
@@ -263,13 +271,13 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
 
     // 设置连接状态
     public void setStatusFromConfig() {
-        mSmackable.setStatusFromConfig();
+        App.mSmack.setStatusFromConfig();
     }
 
     // 新增联系人
     public void addRosterItem(String user, String alias, String group) {
         try {
-            mSmackable.addRosterItem(user, alias, group);
+            App.mSmack.addRosterItem(user, alias, group);
         } catch (XMPPException e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             Log.e(TAG, "exception in addRosterItem(): " + e.getMessage());
@@ -278,13 +286,13 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
 
     // 新增分组
     public void addRosterGroup(String group) {
-        mSmackable.addRosterGroup(group);
+        App.mSmack.addRosterGroup(group);
     }
 
     // 删除联系人
     public void removeRosterItem(String user) {
         try {
-            mSmackable.removeRosterItem(user);
+            App.mSmack.removeRosterItem(user);
         } catch (XMPPException e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             Log.e(TAG, "exception in removeRosterItem(): " + e.getMessage());
@@ -294,7 +302,7 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
     // 将联系人移动到其他组
     public void moveRosterItemToGroup(String user, String group) {
         try {
-            mSmackable.moveRosterItemToGroup(user, group);
+            App.mSmack.moveRosterItemToGroup(user, group);
         } catch (XMPPException e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             Log.e(TAG, "exception in moveRosterItemToGroup(): " + e.getMessage());
@@ -304,7 +312,7 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
     // 重命名联系人
     public void renameRosterItem(String user, String newName) {
         try {
-            mSmackable.renameRosterItem(user, newName);
+            App.mSmack.renameRosterItem(user, newName);
         } catch (XMPPException e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             Log.e(TAG, "exception in renameRosterItem(): " + e.getMessage());
@@ -313,7 +321,11 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
 
     // 重命名组
     public void renameRosterGroup(String group, String newGroup) {
-        mSmackable.renameRosterGroup(group, newGroup);
+        App.mSmack.renameRosterGroup(group, newGroup);
+    }
+
+    public byte[] getAvatar(String jid) throws XMPPException {
+        return App.mSmack.getAvatar(jid);
     }
 
     /**
@@ -378,7 +390,26 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
             }
 
         });
-    }
+    }    Runnable monitorStatus = new Runnable() {
+        public void run() {
+            try {
+                Log.i(TAG, "monitorStatus is running... " + mPackageName);
+                mMainHandler.removeCallbacks(monitorStatus);
+                // 如果在后台运行并且连接上了
+                if (!isAppOnForeground()) {
+                    Log.i(TAG, "app run in background...");
+                    // if (isAuthenticated())
+                    updateServiceNotification(getString(R.string.run_bg_ticker));
+                    return;
+                } else {
+                    stopForeground(true);
+                }
+                // mMainHandler.postDelayed(monitorStatus, 1000L);
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+        }
+    };
 
     private void connectionScuessed() {
         mConnectedState = CONNECTED;// 已经连接上
@@ -415,7 +446,7 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
                         PrefUtils.SCLIENTNOTIFY, false))
                     MediaPlayer.create(TTTalkService.this, R.raw.office).start();
                 if (!isAppOnForeground())
-                    notifyClient(from, mSmackable.getNameForJID(from), message,
+                    notifyClient(from, App.mSmack.getNameForJID(from), message,
                             !mIsBoundTo.contains(from));
                 // T.showLong(XXService.this, from + ": " + message);
 
@@ -427,9 +458,9 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
     // 联系人改变
     public void onRosterChanged() {
         // gracefully handle^W ignore events after a disconnect
-        if (mSmackable == null)
+        if (App.mSmack == null)
             return;
-        if (mSmackable != null && !mSmackable.isAuthenticated()) {
+        if (App.mSmack != null && !App.mSmack.isAuthenticated()) {
             Log.i(TAG, "onRosterChanged(): disconnected without warning");
             connectionFailed(DISCONNECTED_WITHOUT_WARNING);
         }
@@ -446,7 +477,7 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
             return;
         String title = PrefUtils.getPrefString(
                 PrefUtils.ACCOUNT, "");
-        Notification n = new Notification(R.drawable.login_default_avatar,
+        Notification n = new Notification(R.drawable.default_portrait,
                 title, System.currentTimeMillis());
         n.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
 
@@ -503,47 +534,17 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
         login(account, password);// 重连
     }    // 判断程序是否在后台运行的任务
 
-
-    Runnable monitorStatus = new Runnable() {
-        public void run() {
-            try {
-                Log.i(TAG, "monitorStatus is running... " + mPackageName);
-                mMainHandler.removeCallbacks(monitorStatus);
-                // 如果在后台运行并且连接上了
-                if (!isAppOnForeground()) {
-                    Log.i(TAG, "app run in background...");
-                    // if (isAuthenticated())
-                    updateServiceNotification(getString(R.string.run_bg_ticker));
-                    return;
-                } else {
-                    stopForeground(true);
-                }
-                // mMainHandler.postDelayed(monitorStatus, 1000L);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    };
-    private PendingIntent mPingAlarmPendIntent;
-    private static final String PING_ALARM = "com.ruptech.tttalk_android.PING_ALARM";
-    private Intent mPingAlarmIntent = new Intent(PING_ALARM);
-    private PendingIntent mPongTimeoutAlarmPendIntent;
-    private static final String PONG_TIMEOUT_ALARM = "com.ruptech.tttalk_android.PONG_TIMEOUT_ALARM";
-    private Intent mPongTimeoutAlarmIntent = new Intent(PONG_TIMEOUT_ALARM);
-    private PongTimeoutAlarmReceiver mPongTimeoutAlarmReceiver = new PongTimeoutAlarmReceiver();
-    private BroadcastReceiver mPingAlarmReceiver = new PingAlarmReceiver();
-
     public void onLogin() {
         mPingAlarmPendIntent = PendingIntent.getBroadcast(
-                 getApplicationContext(), 0, mPingAlarmIntent,
+                getApplicationContext(), 0, mPingAlarmIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
         mPongTimeoutAlarmPendIntent = PendingIntent.getBroadcast(
-                 getApplicationContext(), 0, mPongTimeoutAlarmIntent,
+                getApplicationContext(), 0, mPongTimeoutAlarmIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
-         registerReceiver(mPingAlarmReceiver, new IntentFilter(
-                 PING_ALARM));
-         registerReceiver(mPongTimeoutAlarmReceiver, new IntentFilter(
-                 PONG_TIMEOUT_ALARM));
+        registerReceiver(mPingAlarmReceiver, new IntentFilter(
+                PING_ALARM));
+        registerReceiver(mPongTimeoutAlarmReceiver, new IntentFilter(
+                PONG_TIMEOUT_ALARM));
         ((AlarmManager) getSystemService(Context.ALARM_SERVICE))
                 .setInexactRepeating(AlarmManager.RTC_WAKEUP,
                         System.currentTimeMillis()
@@ -562,15 +563,40 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
     }
 
     public void unRegisterTimeoutAlarm() {
-        ((AlarmManager)  getSystemService(Context.ALARM_SERVICE))
+        ((AlarmManager) getSystemService(Context.ALARM_SERVICE))
                 .cancel(mPongTimeoutAlarmPendIntent);
     }
 
     public void registerTimeoutAlarm() {
         // register ping timeout handler: PACKET_TIMEOUT(30s) + 3s
-        ((AlarmManager)  getSystemService(Context.ALARM_SERVICE)).set(
+        ((AlarmManager) getSystemService(Context.ALARM_SERVICE)).set(
                 AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
-                        + SmackImpl. PACKET_TIMEOUT + 3000, mPongTimeoutAlarmPendIntent);
+                        + SmackImpl.PACKET_TIMEOUT + 3000, mPongTimeoutAlarmPendIntent);
+    }
+
+    public void createAccount(final String username, final String password) {
+        // TODO
+    }
+
+    private Smack createSmack() {
+        if (App.mSmack == null)
+            App.mSmack = new SmackImpl(TTTalkService.this, TTTalkService.this, getContentResolver());
+        return App.mSmack;
+    }
+
+    public List<String> getRosterGroups() {
+        // we want all, online and offline
+        List<String> list = new ArrayList<>();
+        Cursor cursor = getContentResolver().query(RosterProvider.GROUPS_URI,
+                GROUPS_QUERY, null, null, RosterProvider.RosterConstants.GROUP);
+        int idx = cursor.getColumnIndex(RosterProvider.RosterConstants.GROUP);
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            list.add(cursor.getString(idx));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return list;
     }
 
     /**
@@ -588,8 +614,8 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
      */
     private class PingAlarmReceiver extends BroadcastReceiver {
         public void onReceive(Context ctx, Intent i) {
-            if (mSmackable.isAuthenticated()) {
-                mSmackable. sendServerPing();
+            if (App.mSmack.isAuthenticated()) {
+                App.mSmack.sendServerPing();
             } else
                 Log.d(TAG, "Ping: alarm received, but not connected to server.");
         }
@@ -624,6 +650,8 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
             login(account, password);
         }
     }
+
+
 
 
 }

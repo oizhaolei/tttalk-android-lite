@@ -5,14 +5,12 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.Menu;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
@@ -21,7 +19,6 @@ import android.widget.TextView;
 import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.BuildConfig;
 import com.ruptech.tttalk_android.R;
-import com.ruptech.tttalk_android.model.User;
 import com.ruptech.tttalk_android.service.IConnectionStatusCallback;
 import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.PrefUtils;
@@ -45,28 +42,26 @@ public class LoginActivity extends ActionBarActivity implements
     EditText mUsernameView;
     @InjectView(R.id.password)
     EditText mPasswordView;
-    private TTTalkService mXxService;
+    private TTTalkService mService;
     ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mXxService = ((TTTalkService.XXBinder) service).getService();
-            mXxService.registerConnectionStatusCallback(LoginActivity.this);
+            mService = ((TTTalkService.XXBinder) service).getService();
+            mService.registerConnectionStatusCallback(LoginActivity.this);
             // 开始连接xmpp服务器
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mXxService.unRegisterConnectionStatusCallback();
-            mXxService = null;
+            mService.unRegisterConnectionStatusCallback();
+            mService = null;
         }
 
     };
-    /**
-     * Keep track of the login task to ensure we can cancel it if requested.
-     */
-    private UserLoginTask mAuthTask = null;
     private ProgressDialog progressDialog;
+    private String username;
+    private String password;
 
     private void gotoMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
@@ -114,14 +109,13 @@ public class LoginActivity extends ActionBarActivity implements
     }
 
     @OnClick(R.id.username_sign_in_button)
-    public void doSign() {
+    public void doSignIn() {
         attemptLogin();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    @OnClick(R.id.username_sign_up_button)
+    public void doSignUp() {
+        //TODO
     }
 
     /**
@@ -131,18 +125,14 @@ public class LoginActivity extends ActionBarActivity implements
      */
     public void attemptLogin() {
 
-        if (mAuthTask != null) {
-            return;
-        }
-
         // Reset errors.
         mUsernameView.setError(null);
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
         String server = mServerView.getText().toString();
-        String username = mUsernameView.getText().toString();
-        String password = mPasswordView.getText().toString();
+        username = mUsernameView.getText().toString();
+        password = mPasswordView.getText().toString();
 
         boolean cancel = false;
         View focusView = null;
@@ -171,11 +161,18 @@ public class LoginActivity extends ActionBarActivity implements
             // form field with an error.
             focusView.requestFocus();
         } else {
+
+            progressDialog = ProgressDialog.show(LoginActivity.this,
+                    LoginActivity.this.getString(R.string.progress_title),
+                    LoginActivity.this.getString(R.string.progress_message), true, true);
+
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            PrefUtils.setPrefString( PrefUtils.Server, server);
-            mAuthTask = new UserLoginTask(username, password);
-            mAuthTask.execute((Void) null);
+            PrefUtils.setPrefString(PrefUtils.Server, server);
+            mService.login(username, password);
+
+//            mAuthTask = new UserLoginTask(username, password);
+//            mAuthTask.execute((Void) null);
         }
     }
 
@@ -191,81 +188,41 @@ public class LoginActivity extends ActionBarActivity implements
     public void connectionStatusChanged(int connectedState, String reason) {
         if (progressDialog != null && progressDialog.isShowing())
             progressDialog.dismiss();
-        if (connectedState == TTTalkService.CONNECTED) {
-            //save2Preferences();
+        if (connectedState == TTTalkService.CONNECTED && mService.isAuthenticated()) {
+            save2Preferences();
             startActivity(new Intent(this, MainActivity.class));
             finish();
         }
     }
 
+    private void save2Preferences() {
+        PrefUtils.setPrefString(PrefUtils.ACCOUNT,
+                username);// 帐号是一直保存的
+        PrefUtils.setPrefString(PrefUtils.PASSWORD,
+                password);
+
+        PrefUtils.setPrefString(
+                PrefUtils.STATUS_MODE,
+                PrefUtils.AVAILABLE);
+    }
+
     private void unbindXMPPService() {
         try {
             unbindService(mServiceConnection);
-            Log.i(TAG, "[SERVICE] Unbind");
+            Log.i(TAG, "unbindXMPPServiced");
         } catch (IllegalArgumentException e) {
             Log.e(TAG, "Service wasn't bound!");
         }
     }
 
     private void bindXMPPService() {
-        Log.e(TAG, "[SERVICE] Unbind");
+        Log.e(TAG, "bindXMPPService");
         Intent mServiceIntent = new Intent(this, TTTalkService.class);
         mServiceIntent.setAction(LOGIN_ACTION);
         bindService(mServiceIntent, mServiceConnection,
                 Context.BIND_AUTO_CREATE + Context.BIND_DEBUG_UNBIND);
     }
 
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
-
-        private final String mUsername;
-        private final String mPassword;
-        private User user;
-
-        UserLoginTask(String username, String password) {
-            mUsername = username;
-            mPassword = password;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            try {
-                if (mXxService != null) {
-                    mXxService.login(mUsername, mPassword);
-                }
-            } catch (Exception e) {
-                return false;
-            }
-
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            mAuthTask = null;
-
-            if (success) {
-                finish();
-                gotoMainActivity();
-            } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
-            }
-            if (progressDialog != null) {
-                progressDialog.dismiss();
-            }
-        }
-
-        @Override
-        protected void onPreExecute() {
-            progressDialog = ProgressDialog.show(LoginActivity.this,
-                    LoginActivity.this.getString(R.string.progress_title),
-                    LoginActivity.this.getString(R.string.progress_message), true, false);
-        }
-    }
 }
 
 

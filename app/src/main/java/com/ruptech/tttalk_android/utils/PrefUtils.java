@@ -57,6 +57,9 @@ public class PrefUtils {
     public final static String STATUS_MODE = "status_mode";
     public final static String STATUS_MESSAGE = "status_message";
     public final static String THEME = "theme";
+    final public static String PREF_USER = "USER_INFO";
+    private static final String TAG = PrefUtils.class.getSimpleName();
+    private static SharedPreferences mPref;
 
     public static String getPrefString(String key,
                                        final String defaultValue) {
@@ -139,10 +142,6 @@ public class PrefUtils {
         editor.clear();
         editor.commit();
     }
-    final public static String PREF_USER = "USER_INFO";
-    private static final String TAG = PrefUtils.class.getSimpleName();
-    private static SharedPreferences mPref;
-
 
     private static SharedPreferences getPref() {
         if (mPref == null) {

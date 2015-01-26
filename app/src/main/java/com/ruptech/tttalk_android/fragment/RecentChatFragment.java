@@ -16,7 +16,7 @@ import com.ruptech.tttalk_android.activity.ChatActivity;
 import com.ruptech.tttalk_android.adapter.RecentChatAdapter;
 import com.ruptech.tttalk_android.db.ChatProvider;
 import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
-import com.ruptech.tttalk_android.utils.XMPPHelper;
+import com.ruptech.tttalk_android.utils.XMPPUtils;
 
 public class RecentChatFragment extends ListFragment {
     private static final String TAG = RecentChatFragment.class.getName();
@@ -75,7 +75,7 @@ public class RecentChatFragment extends ListFragment {
         String jid = clickCursor.getString(clickCursor
                 .getColumnIndex(ChatConstants.JID));
 
-        startChatActivity(jid, XMPPHelper.splitJidAndServer(jid));
+        startChatActivity(jid, XMPPUtils.splitJidAndServer(jid));
     }
 
     private void initView() {

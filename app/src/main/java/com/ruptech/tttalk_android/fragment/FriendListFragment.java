@@ -8,9 +8,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.ListView;
 
+import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.activity.ChatActivity;
 import com.ruptech.tttalk_android.adapter.RosterAdapter;
 import com.ruptech.tttalk_android.db.ChatProvider;
@@ -25,6 +28,10 @@ public class FriendListFragment extends ListFragment {
     private ContentResolver mContentResolver;
     private RosterAdapter rosterAdapter;
 
+    public FriendListFragment() {
+        super();
+    }
+
     public static Fragment newInstance() {
         return new FriendListFragment();
     }
@@ -32,8 +39,16 @@ public class FriendListFragment extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+
         mContentResolver = getActivity().getContentResolver();
         rosterAdapter = new RosterAdapter(getActivity());
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_roster, menu);
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override

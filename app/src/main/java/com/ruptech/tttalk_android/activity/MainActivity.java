@@ -4,7 +4,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -19,14 +18,13 @@ import android.widget.Toast;
 
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.XXBroadcastReceiver;
-import com.ruptech.tttalk_android.db.RosterProvider;
 import com.ruptech.tttalk_android.fragment.FriendListFragment;
 import com.ruptech.tttalk_android.fragment.RecentChatFragment;
-import com.ruptech.tttalk_android.fragment.SettingsFragment;
 import com.ruptech.tttalk_android.service.IConnectionStatusCallback;
 import com.ruptech.tttalk_android.service.TTTalkService;
-import com.ruptech.tttalk_android.utils.XMPPHelper;
 import com.ruptech.tttalk_android.utils.PrefUtils;
+import com.ruptech.tttalk_android.utils.XMPPUtils;
+import com.ruptech.tttalk_android.view.AddRosterItemDialog;
 import com.ruptech.tttalk_android.view.PagerItem;
 import com.ruptech.tttalk_android.view.ViewPagerAdapter;
 
@@ -40,12 +38,11 @@ import it.neokree.materialtabs.MaterialTab;
 import it.neokree.materialtabs.MaterialTabHost;
 import it.neokree.materialtabs.MaterialTabListener;
 
-public class MainActivity extends ActionBarActivity implements MaterialTabListener, IConnectionStatusCallback, XXBroadcastReceiver.EventHandler {
+public class MainActivity extends ActionBarActivity implements MaterialTabListener,
+        IConnectionStatusCallback, XXBroadcastReceiver.EventHandler {
 
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String EXTRA_TYPE = "EXTRA_TYPE";
-    private static final String[] GROUPS_QUERY = new String[]{
-            RosterProvider.RosterConstants._ID, RosterProvider.RosterConstants.GROUP,};
     public static HashMap<String, Integer> mStatusMap;
 
     static {
@@ -64,33 +61,33 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
     @InjectView(R.id.pager)
     ViewPager pager;
     long back_pressed;
-    private TTTalkService mXxService;
+    private TTTalkService mService;
     ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mXxService = ((TTTalkService.XXBinder) service).getService();
-            mXxService.registerConnectionStatusCallback(MainActivity.this);
+            mService = ((TTTalkService.XXBinder) service).getService();
+            mService.registerConnectionStatusCallback(MainActivity.this);
             // 开始连接xmpp服务器
-            if (!mXxService.isAuthenticated()) {
+            if (!mService.isAuthenticated()) {
                 String usr = PrefUtils.getPrefString(
                         PrefUtils.ACCOUNT, "");
-                String password = PrefUtils.getPrefString( PrefUtils.PASSWORD, "");
-                mXxService.login(usr, password);
-                // getSupportActionBar().setTitle (R.string.login_prompt_msg);
+                String password = PrefUtils.getPrefString(PrefUtils.PASSWORD, "");
+                mService.login(usr, password);
+                getSupportActionBar().setTitle(R.string.login_prompt_msg);
                 // setStatusImage(false);
                 // mTitleProgressBar.setVisibility(View.VISIBLE);
             } else {
-                getSupportActionBar().setTitle(XMPPHelper
-                        .splitJidAndServer(PrefUtils.getPrefString( PrefUtils.ACCOUNT,
+                getSupportActionBar().setTitle(XMPPUtils
+                        .splitJidAndServer(PrefUtils.getPrefString(PrefUtils.ACCOUNT,
                                 "")));
             }
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mXxService.unRegisterConnectionStatusCallback();
-            mXxService = null;
+            mService.unRegisterConnectionStatusCallback();
+            mService = null;
         }
 
     };
@@ -112,7 +109,7 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
     public void connectionStatusChanged(int connectedState, String reason) {
         switch (connectedState) {
             case TTTalkService.CONNECTED:
-                getSupportActionBar().setTitle(XMPPHelper.splitJidAndServer(PrefUtils
+                getSupportActionBar().setTitle(XMPPUtils.splitJidAndServer(PrefUtils
                         .getPrefString(
                                 PrefUtils.ACCOUNT, "")));
                 break;
@@ -124,6 +121,7 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
                 break;
 
             default:
+                getSupportActionBar().setTitle("?");
                 break;
         }
     }
@@ -132,9 +130,9 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
     private void unbindXMPPService() {
         try {
             unbindService(mServiceConnection);
-            Log.i(TAG, "[SERVICE] Unbind");
+            Log.i(TAG, "unbindXMPPService");
         } catch (IllegalArgumentException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage(), e);
         }
     }
 
@@ -153,8 +151,9 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
     }
 
     private void bindXMPPService() {
-        Log.i(TAG, "[SERVICE] Unbind");
-        bindService(new Intent(MainActivity.this, TTTalkService.class),
+        Log.i(TAG, "bindXMPPService");
+        Intent serviceIntent = new Intent(MainActivity.this, TTTalkService.class);
+        bindService(serviceIntent,
                 mServiceConnection, Context.BIND_AUTO_CREATE
                         + Context.BIND_DEBUG_UNBIND);
     }
@@ -183,8 +182,7 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
                 getString(R.string.tab_title_chats)
         ) {
             public Fragment createFragment() {
-                return RecentChatFragment.newInstance(
-                );
+                return RecentChatFragment.newInstance();
             }
         });
 
@@ -195,29 +193,7 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
                 return FriendListFragment.newInstance();
             }
         });
-        mTabs.add(new PagerItem(
-                getString(R.string.tab_title_settings) // Title
-        ) {
-            public Fragment createFragment() {
-                return SettingsFragment.newInstance();
-            }
-        });
         return mTabs;
-    }
-
-    public List<String> getRosterGroups() {
-        // we want all, online and offline
-        List<String> list = new ArrayList<>();
-        Cursor cursor = getContentResolver().query(RosterProvider.GROUPS_URI,
-                GROUPS_QUERY, null, null, RosterProvider.RosterConstants.GROUP);
-        int idx = cursor.getColumnIndex(RosterProvider.RosterConstants.GROUP);
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            list.add(cursor.getString(idx));
-            cursor.moveToNext();
-        }
-        cursor.close();
-        return list;
     }
 
     @Override
@@ -275,6 +251,10 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
         switch (item.getItemId()) {
             case R.id.action_settings:
                 gotoSettingActivity();
+                return true;
+            case R.id.action_add_roster:
+                new AddRosterItemDialog(this,
+                        mService).show();
                 return true;
         }
 

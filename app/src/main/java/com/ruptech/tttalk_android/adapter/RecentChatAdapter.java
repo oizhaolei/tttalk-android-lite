@@ -13,7 +13,7 @@ import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.db.ChatProvider;
 import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
 import com.ruptech.tttalk_android.utils.TimeUtil;
-import com.ruptech.tttalk_android.utils.XMPPHelper;
+import com.ruptech.tttalk_android.utils.XMPPUtils;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -76,7 +76,7 @@ public class RecentChatAdapter extends SimpleCursorAdapter {
                 + (int) dateMilliseconds) == null) {
             convertView = mLayoutInflater.inflate(
                     R.layout.recent_listview_item, parent, false);
-            viewHolder =  new ViewHolder(convertView);
+            viewHolder = new ViewHolder(convertView);
 
             convertView.setTag(R.mipmap.ic_launcher + (int) dateMilliseconds,
                     viewHolder);
@@ -86,8 +86,8 @@ public class RecentChatAdapter extends SimpleCursorAdapter {
             viewHolder = (ViewHolder) convertView.getTag(R.mipmap.ic_launcher
                     + (int) dateMilliseconds);
         }
-        viewHolder.jidView.setText(XMPPHelper.splitJidAndServer(jid));
-        viewHolder.msgView.setText(XMPPHelper
+        viewHolder.jidView.setText(XMPPUtils.splitJidAndServer(jid));
+        viewHolder.msgView.setText(XMPPUtils
                 .convertNormalStringToSpannableString(mContext, message, true));
         viewHolder.dataView.setText(date);
 
@@ -107,7 +107,7 @@ public class RecentChatAdapter extends SimpleCursorAdapter {
     }
 
 
-      static class ViewHolder {
+    static class ViewHolder {
         @InjectView(R.id.recent_list_item_name)
         TextView jidView;
         @InjectView(R.id.recent_list_item_time)

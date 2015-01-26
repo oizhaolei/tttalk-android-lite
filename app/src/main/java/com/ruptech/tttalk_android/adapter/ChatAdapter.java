@@ -16,9 +16,9 @@ import android.widget.TextView;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.db.ChatProvider;
 import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
-import com.ruptech.tttalk_android.utils.TimeUtil;
-import com.ruptech.tttalk_android.utils.XMPPHelper;
 import com.ruptech.tttalk_android.utils.PrefUtils;
+import com.ruptech.tttalk_android.utils.TimeUtil;
+import com.ruptech.tttalk_android.utils.XMPPUtils;
 
 public class ChatAdapter extends SimpleCursorAdapter {
     private static final String TAG = ChatAdapter.class.getName();
@@ -106,13 +106,13 @@ public class ChatAdapter extends SimpleCursorAdapter {
 
     private void bindViewData(ViewHolder holder, String date, boolean from_me,
                               String from, String message, int delivery_status) {
-        holder.avatar.setBackgroundResource(R.drawable.login_default_avatar);
+        holder.avatar.setBackgroundResource(R.drawable.default_portrait);
         if (from_me
                 && !PrefUtils.getPrefBoolean(
                 PrefUtils.SHOW_MY_HEAD, true)) {
             holder.avatar.setVisibility(View.GONE);
         }
-        holder.content.setText(XMPPHelper.convertNormalStringToSpannableString(
+        holder.content.setText(XMPPUtils.convertNormalStringToSpannableString(
                 mContext, message, false));
         holder.time.setText(date);
 

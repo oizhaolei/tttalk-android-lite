@@ -2,6 +2,7 @@ package com.ruptech.tttalk_android.activity;
 
 import android.content.AsyncQueryHandler;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.ContentObserver;
@@ -36,7 +37,7 @@ import com.ruptech.tttalk_android.service.IConnectionStatusCallback;
 import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.utils.StatusMode;
-import com.ruptech.tttalk_android.utils.XMPPHelper;
+import com.ruptech.tttalk_android.utils.XMPPUtils;
 
 public class ChatActivity extends ActionBarActivity implements OnTouchListener,
         OnClickListener, IConnectionStatusCallback {
@@ -53,10 +54,8 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
             RosterProvider.RosterConstants.STATUS_MODE,
             RosterProvider.RosterConstants.STATUS_MESSAGE,};
     private ListView mMsgListView;// 对话ListView
-    private int mCurrentPage = 0;// 当前表情页
     private Button mSendMsgBtn;// 发送消息button
     private EditText mChatEditText;// 消息输入框
-    private WindowManager.LayoutParams mWindowNanagerParams;
     private InputMethodManager mInputMethodManager;
     private String mWithJabberID = null;// 当前聊天用户的ID
     private ContentObserver mContactObserver = new ContactObserver();// 联系人数据监听，主要是监听对方在线状态
@@ -72,7 +71,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
                 String usr = PrefUtils.getPrefString(
                         PrefUtils.ACCOUNT, "");
                 String password = PrefUtils.getPrefString(
-                         PrefUtils.PASSWORD, "");
+                        PrefUtils.PASSWORD, "");
                 mXxService.login(usr, password);
             }
         }
@@ -91,6 +90,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
     private void unbindXMPPService() {
         try {
             unbindService(mServiceConnection);
+            Log.i(TAG, "unbindXMPPService");
         } catch (IllegalArgumentException e) {
             Log.e(TAG, "Service wasn't bound!");
         }
@@ -100,10 +100,11 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
      * 绑定服务
      */
     private void bindXMPPService() {
-        Intent mServiceIntent = new Intent(this, TTTalkService.class);
+        Log.i(TAG, "bindXMPPService");
+        Intent serviceIntent = new Intent(this, TTTalkService.class);
         Uri chatURI = Uri.parse(mWithJabberID);
-        mServiceIntent.setData(chatURI);
-        bindService(mServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+        serviceIntent.setData(chatURI);
+        bindService(serviceIntent, mServiceConnection, Context.BIND_AUTO_CREATE + Context.BIND_DEBUG_UNBIND);
     }
 
     @Override
@@ -145,7 +146,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
             int status_mode = cursor.getInt(MODE_IDX);
             String status_message = cursor.getString(MSG_IDX);
             Log.d(TAG, "contact status changed: " + status_mode + " " + status_message);
-            getSupportActionBar().setTitle(XMPPHelper.splitJidAndServer(getIntent()
+            getSupportActionBar().setTitle(XMPPUtils.splitJidAndServer(getIntent()
                     .getStringExtra(INTENT_EXTRA_USERNAME)));
             int statusId = StatusMode.values()[status_mode].getDrawableId();
             if (statusId != -1) {// 如果对应离线状态
@@ -215,7 +216,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
 
     private void initView() {
         mInputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        mWindowNanagerParams = getWindow().getAttributes();
+        WindowManager.LayoutParams mWindowNanagerParams = getWindow().getAttributes();
 
         mMsgListView = (ListView) findViewById(R.id.msg_listView);
         // 触摸ListView隐藏表情和输入法

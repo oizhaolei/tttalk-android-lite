@@ -17,6 +17,7 @@ import com.ruptech.tttalk_android.db.RosterProvider;
 import com.ruptech.tttalk_android.db.RosterProvider.RosterConstants;
 import com.ruptech.tttalk_android.model.Roster;
 import com.ruptech.tttalk_android.utils.StatusMode;
+import com.ruptech.tttalk_android.utils.XMPPUtils;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -52,16 +53,16 @@ public class RosterAdapter extends ArrayAdapter<Roster> {
             RosterConstants._ID, RosterConstants.JID, RosterConstants.ALIAS,
             RosterConstants.STATUS_MODE, RosterConstants.STATUS_MESSAGE,};
     private static final int resource = R.layout.contact_list_item_for_buddy;
-    private Context mContext;
+    private final Context mContext;
     private ContentResolver mContentResolver;
     private LayoutInflater mInflater;
 
     public RosterAdapter(Context context) {
         super(context, resource);
-        // TODO Auto-generated constructor stub
+
         mContext = context;
-        mInflater = LayoutInflater.from(context);
-        mContentResolver = context.getContentResolver();
+        mInflater = LayoutInflater.from(mContext);
+        mContentResolver = mContext.getContentResolver();
 
         requery();
     }
@@ -115,22 +116,23 @@ public class RosterAdapter extends ArrayAdapter<Roster> {
         holder.statusMsgView.setText(TextUtils.isEmpty(roster
                 .getStatusMessage()) ? mContext.getString(R.string.status_offline) : roster.getStatusMessage());
         setViewImage(holder.onlineModeView, holder.headView, holder.statusView,
-                roster.getStatusMode());
+                roster.getStatusMode(), roster.getJid());
 
         return view;
     }
 
     protected void setViewImage(ImageView online, ImageView head, ImageView v,
-                                String value) {
+                                String value, String jid) {
         int presenceMode = Integer.parseInt(value);
         int statusDrawable = getIconForPresenceMode(presenceMode);
         if (statusDrawable == -1) {
             v.setVisibility(View.INVISIBLE);
-            head.setImageResource(R.drawable.login_default_avatar_offline);
+            head.setImageResource(R.drawable.default_portrait);
             online.setImageDrawable(null);
             return;
         }
-        head.setImageResource(R.drawable.login_default_avatar);
+        XMPPUtils.setImage(head, jid);
+
         online.setImageResource(R.drawable.terminal_icon_ios_online);
         v.setImageResource(statusDrawable);
 

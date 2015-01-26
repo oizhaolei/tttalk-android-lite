@@ -1,5 +1,6 @@
 package com.ruptech.tttalk_android.view;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,27 +14,27 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.ruptech.tttalk_android.R;
-import com.ruptech.tttalk_android.exception.XXAdressMalformedException;
 import com.ruptech.tttalk_android.activity.MainActivity;
+import com.ruptech.tttalk_android.exception.AdressMalformedException;
 import com.ruptech.tttalk_android.service.TTTalkService;
-import com.ruptech.tttalk_android.utils.XMPPHelper;
+import com.ruptech.tttalk_android.utils.XMPPUtils;
 
 public class AddRosterItemDialog extends AlertDialog implements
         DialogInterface.OnClickListener, TextWatcher {
 
-    private MainActivity mMainActivity;
-    private TTTalkService mXxService;
+    private Activity mMainActivity;
+    private TTTalkService mService;
 
     private Button okButton;
     private EditText userInputField;
     private EditText aliasInputField;
     private GroupNameView mGroupNameView;
 
-    public AddRosterItemDialog(MainActivity mainActivity,
+    public AddRosterItemDialog(Activity mainActivity,
                                TTTalkService service) {
         super(mainActivity);
         mMainActivity = mainActivity;
-        mXxService = service;
+        mService = service;
 
         setTitle(R.string.addFriend_Title);
 
@@ -46,7 +47,7 @@ public class AddRosterItemDialog extends AlertDialog implements
         aliasInputField = (EditText) group.findViewById(R.id.AddContactAlias_EditTextField);
 
         mGroupNameView = (GroupNameView) group.findViewById(R.id.AddRosterItem_GroupName);
-        mGroupNameView.setGroupList(mMainActivity.getRosterGroups());
+        mGroupNameView.setGroupList(mService.getRosterGroups());
 
         setButton(BUTTON_POSITIVE, mainActivity.getString(android.R.string.ok), this);
         setButton(BUTTON_NEGATIVE, mainActivity.getString(android.R.string.cancel),
@@ -70,17 +71,17 @@ public class AddRosterItemDialog extends AlertDialog implements
     }
 
     public void onClick(DialogInterface dialog, int which) {
-        mXxService.addRosterItem(userInputField.getText()
+        mService.addRosterItem(userInputField.getText()
                         .toString(), aliasInputField.getText().toString(),
                 mGroupNameView.getGroupName());
     }
 
     public void afterTextChanged(Editable s) {
         try {
-            XMPPHelper.verifyJabberID(s);
+            XMPPUtils.verifyJabberID(s);
             okButton.setEnabled(true);
-            userInputField.setTextColor(XMPPHelper.getEditTextColor(mMainActivity));
-        } catch (XXAdressMalformedException e) {
+            userInputField.setTextColor(XMPPUtils.getEditTextColor(mMainActivity));
+        } catch (AdressMalformedException e) {
             okButton.setEnabled(false);
             userInputField.setTextColor(Color.RED);
         }

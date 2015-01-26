@@ -1,27 +1,16 @@
 package com.ruptech.tttalk_android.activity;
 
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
-import android.widget.TextView;
 
-import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
+import com.ruptech.tttalk_android.fragment.SettingsFragment;
 
 import butterknife.ButterKnife;
-import butterknife.InjectView;
-import butterknife.OnClick;
 
 public class SettingsActivity extends ActionBarActivity {
-
-    @InjectView(R.id.activity_setting_push)
-    TextView mPushTextView;
-
-    @OnClick(R.id.activity_setting_logout_layout)
-    public void doLogout() {
-        App.logout();
-        finish();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,8 +22,11 @@ public class SettingsActivity extends ActionBarActivity {
         this.setSupportActionBar(toolbar);
         String title = getString(R.string.action_settings);
         getSupportActionBar().setTitle(title);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mPushTextView.setText("");
+        if (savedInstanceState == null) {
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.sample_content_fragment, SettingsFragment.newInstance());
+            transaction.commit();
+        }
     }
 }

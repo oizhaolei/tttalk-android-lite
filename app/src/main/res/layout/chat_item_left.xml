@@ -30,7 +30,7 @@
         android:layout_width="40.0dip"
         android:layout_height="40.0dip"
         android:layout_below="@id/datetime"
-        android:background="@drawable/login_default_avatar"
+        android:background="@drawable/default_portrait"
         android:clickable="true"
         android:scaleType="fitXY"
         android:focusable="true"

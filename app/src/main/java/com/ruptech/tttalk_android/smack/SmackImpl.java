@@ -15,6 +15,7 @@ import com.ruptech.tttalk_android.db.RosterProvider.RosterConstants;
 import com.ruptech.tttalk_android.exception.XMPPException;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.utils.StatusMode;
+import com.ruptech.tttalk_android.utils.XMPPUtils;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
@@ -40,6 +41,7 @@ import org.jivesoftware.smackx.carbons.CarbonManager;
 import org.jivesoftware.smackx.forward.Forwarded;
 import org.jivesoftware.smackx.packet.DelayInfo;
 import org.jivesoftware.smackx.packet.DelayInformation;
+import org.jivesoftware.smackx.packet.VCard;
 import org.jivesoftware.smackx.ping.PingManager;
 import org.jivesoftware.smackx.ping.packet.Ping;
 import org.jivesoftware.smackx.ping.provider.PingProvider;
@@ -55,8 +57,8 @@ import java.util.Date;
 public class SmackImpl implements Smack {
     public static final String XMPP_IDENTITY_NAME = "tttalk";
     public static final String XMPP_IDENTITY_TYPE = "phone";
-    private static final String TAG = SmackImpl.class.getName();
     public static final int PACKET_TIMEOUT = 30000;
+    private static final String TAG = SmackImpl.class.getName();
     final static private String[] SEND_OFFLINE_PROJECTION = new String[]{
             ChatConstants._ID, ChatConstants.JID, ChatConstants.MESSAGE,
             ChatConstants.DATE, ChatConstants.PACKET_ID};
@@ -85,13 +87,13 @@ public class SmackImpl implements Smack {
     private long mPingTimestamp;
 
     public SmackImpl(Context context, SmackListener listener, ContentResolver contentResolver) {
-        int port = PrefUtils.getPrefInt( 
+        int port = PrefUtils.getPrefInt(
                 PrefUtils.PORT, PrefUtils.DEFAULT_PORT_INT);
-        String server = PrefUtils.getPrefString( 
+        String server = PrefUtils.getPrefString(
                 PrefUtils.Server, PrefUtils.GMAIL_SERVER);
-        boolean smackDebug = PrefUtils.getPrefBoolean( 
+        boolean smackDebug = PrefUtils.getPrefBoolean(
                 PrefUtils.SMACKDEBUG, false);
-        boolean requireSsl = PrefUtils.getPrefBoolean( 
+        boolean requireSsl = PrefUtils.getPrefBoolean(
                 PrefUtils.REQUIRE_TLS, false);
         this.mXMPPConfig = new ConnectionConfiguration(server, port);
 
@@ -193,8 +195,8 @@ public class SmackImpl implements Smack {
             initServiceDiscovery();// 与服务器交互消息监听,发送消息需要回执，判断是否发送成功
             // SMACK auto-logins if we were authenticated before
             if (!mXMPPConnection.isAuthenticated()) {
-                String ressource = PrefUtils.getPrefString( 
-                        PrefUtils.RESSOURCE,  XMPP_IDENTITY_NAME);
+                String ressource = PrefUtils.getPrefString(
+                        PrefUtils.RESSOURCE, XMPP_IDENTITY_NAME);
                 mXMPPConnection.login(account, password, ressource);
             }
             setStatusFromConfig();// 更新在线状态
@@ -263,7 +265,7 @@ public class SmackImpl implements Smack {
                             chatMessage = msg.getBody();
                             if (chatMessage == null)
                                 return;
-                            String fromJID = getJabberID(msg.getTo());
+                            String fromJID = XMPPUtils.getJabberID(msg.getTo());
 
                             addChatMessageToDB(ChatConstants.OUTGOING, fromJID,
                                     chatMessage, ChatConstants.DS_SENT_OR_READ,
@@ -292,7 +294,7 @@ public class SmackImpl implements Smack {
                         else
                             ts = System.currentTimeMillis();
 
-                        String fromJID = getJabberID(msg.getFrom());
+                        String fromJID = XMPPUtils.getJabberID(msg.getFrom());
 
                         addChatMessageToDB(ChatConstants.INCOMING, fromJID,
                                 chatMessage, ChatConstants.DS_NEW, ts,
@@ -303,7 +305,7 @@ public class SmackImpl implements Smack {
                     // SMACK silently discards exceptions dropped from
                     // processPacket :(
                     Log.e(TAG, "failed to process packet:");
-                    e.printStackTrace();
+                    Log.e(TAG, e.getMessage(), e);
                 }
             }
         };
@@ -360,7 +362,7 @@ public class SmackImpl implements Smack {
                     // SMACK silently discards exceptions dropped from
                     // processPacket :(
                     Log.e(TAG, "failed to process packet:");
-                    e.printStackTrace();
+                    Log.e(TAG, e.getMessage(), e);
                 }
             }
         };
@@ -474,7 +476,7 @@ public class SmackImpl implements Smack {
             @Override
             public void presenceChanged(Presence presence) {
                 Log.i(TAG, "presenceChanged(" + presence.getFrom() + "): " + presence);
-                String jabberID = getJabberID(presence.getFrom());
+                String jabberID = XMPPUtils.getJabberID(presence.getFrom());
                 RosterEntry rosterEntry = mRoster.getEntry(jabberID);
                 updateRosterEntryInDB(rosterEntry);
                 mSmackListener.onRosterChanged();
@@ -482,7 +484,7 @@ public class SmackImpl implements Smack {
 
             @Override
             public void entriesUpdated(Collection<String> entries) {
-               
+
                 Log.i(TAG, "entriesUpdated(" + entries + ")");
                 for (String entry : entries) {
                     RosterEntry rosterEntry = mRoster.getEntry(entry);
@@ -517,11 +519,6 @@ public class SmackImpl implements Smack {
             }
         };
         mRoster.addRosterListener(mRosterListener);
-    }
-
-    private String getJabberID(String from) {
-        String[] res = from.split("/");
-        return res[0].toLowerCase();
     }
 
     /**
@@ -596,14 +593,14 @@ public class SmackImpl implements Smack {
     }
 
     public void setStatusFromConfig() {
-        boolean messageCarbons = PrefUtils.getPrefBoolean( 
+        boolean messageCarbons = PrefUtils.getPrefBoolean(
                 PrefUtils.MESSAGE_CARBONS, true);
-        String statusMode = PrefUtils.getPrefString( 
+        String statusMode = PrefUtils.getPrefString(
                 PrefUtils.STATUS_MODE, PrefUtils.AVAILABLE);
-        String statusMessage = PrefUtils.getPrefString( 
+        String statusMessage = PrefUtils.getPrefString(
                 PrefUtils.STATUS_MESSAGE,
                 mContext.getString(R.string.status_online));
-        int priority = PrefUtils.getPrefInt( 
+        int priority = PrefUtils.getPrefInt(
                 PrefUtils.PRIORITY, 0);
         if (messageCarbons)
             CarbonManager.getInstanceFor(mXMPPConnection).sendCarbonsEnabled(
@@ -662,7 +659,7 @@ public class SmackImpl implements Smack {
     @Override
     public void addRosterItem(String user, String alias, String group)
             throws XMPPException {
-       
+
         addRosterEntry(user, alias, group);
     }
 
@@ -678,7 +675,7 @@ public class SmackImpl implements Smack {
 
     @Override
     public void removeRosterItem(String user) throws XMPPException {
-       
+
         Log.d(TAG, "removeRosterItem(" + user + ")");
 
         removeRosterEntry(user);
@@ -701,7 +698,7 @@ public class SmackImpl implements Smack {
     @Override
     public void renameRosterItem(String user, String newName)
             throws XMPPException {
-       
+
         mRoster = mXMPPConnection.getRoster();
         RosterEntry rosterEntry = mRoster.getEntry(user);
 
@@ -714,7 +711,7 @@ public class SmackImpl implements Smack {
     @Override
     public void moveRosterItemToGroup(String user, String group)
             throws XMPPException {
-       
+
         tryToMoveRosterEntryToGroup(user, group);
     }
 
@@ -769,7 +766,7 @@ public class SmackImpl implements Smack {
 
     @Override
     public void renameRosterGroup(String group, String newGroup) {
-       
+
         Log.i(TAG, "oldgroup=" + group + ", newgroup=" + newGroup);
         mRoster = mXMPPConnection.getRoster();
         RosterGroup groupToRename = mRoster.getGroup(group);
@@ -781,7 +778,7 @@ public class SmackImpl implements Smack {
 
     @Override
     public void requestAuthorizationForRosterItem(String user) {
-       
+
         Presence response = new Presence(Presence.Type.subscribe);
         response.setTo(user);
         mXMPPConnection.sendPacket(response);
@@ -789,14 +786,14 @@ public class SmackImpl implements Smack {
 
     @Override
     public void addRosterGroup(String group) {
-       
+
         mRoster = mXMPPConnection.getRoster();
         mRoster.createGroup(group);
     }
 
     @Override
     public void sendMessage(String toJID, String message) {
-       
+
         final Message newMessage = new Message(toJID, Message.Type.chat);
         newMessage.setBody(message);
         newMessage.addExtension(new DeliveryReceiptRequest());
@@ -821,7 +818,7 @@ public class SmackImpl implements Smack {
         }
         Ping ping = new Ping();
         ping.setType(Type.GET);
-        ping.setTo(PrefUtils.getPrefString( 
+        ping.setTo(PrefUtils.getPrefString(
                 PrefUtils.Server, PrefUtils.GMAIL_SERVER));
         mPingID = ping.getPacketID();
         mPingTimestamp = System.currentTimeMillis();
@@ -840,6 +837,27 @@ public class SmackImpl implements Smack {
         } else {
             return jid;
         }
+    }
+
+    @Override
+    public boolean createAccount(String username, String password) {
+        return false;
+    }
+
+    @Override
+    public byte[] getAvatar(String jid) throws XMPPException {
+        try {
+            VCard vcard = new VCard();
+            vcard.load(mXMPPConnection, jid);
+            return vcard.getAvatar();
+        } catch (Exception e) {
+            throw new XMPPException(e.getMessage());
+        }
+    }
+
+    @Override
+    public String getUser() {
+        return mXMPPConnection.getUser();
     }
 
     @Override

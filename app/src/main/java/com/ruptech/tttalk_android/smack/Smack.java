@@ -33,4 +33,10 @@ public interface Smack {
     public void sendServerPing();
 
     public String getNameForJID(String jid);
+
+    boolean createAccount(String username, String password);
+
+    byte[] getAvatar(String jid) throws XMPPException;
+
+    String getUser();
 }
