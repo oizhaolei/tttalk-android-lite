@@ -153,18 +153,16 @@ public class ChatAdapter extends SimpleCursorAdapter {
         CharSequence text = XMPPUtils.convertNormalStringToSpannableString(
                 mContext, message, false);
         holder.content.setText(text);
-        holder.contentLayout.setTag(text);
+        holder.contentMenu.setTag(text);
         holder.time.setText(date);
-
-
     }
 
     private ViewHolder buildHolder(View convertView) {
         final ViewHolder holder = new ViewHolder(convertView);
-        holder.contentLayout.setOnClickListener(new View.OnClickListener() {
+        holder.contentMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String content = (String) holder.contentLayout.getTag();
+                String content = (String) holder.contentMenu.getTag();
                 translate(content, "zh", "en");
             }
         });
@@ -173,8 +171,8 @@ public class ChatAdapter extends SimpleCursorAdapter {
     }
 
     static class ViewHolder {
-        @InjectView(R.id.relativeLayout1)
-        View contentLayout;
+        @InjectView(R.id.more)
+        View contentMenu;
         @InjectView(R.id.textView2)
         TextView content;
         @InjectView(R.id.datetime)

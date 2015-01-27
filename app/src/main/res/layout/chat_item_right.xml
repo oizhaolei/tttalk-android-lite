@@ -23,7 +23,6 @@
         android:textColor="@color/chat_time"
         android:textSize="10.0sp"
          />
-        android:visibility="gone"
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -34,12 +33,11 @@
         android:orientation="horizontal" >
 
         <RelativeLayout
-            android:id="@+id/relativeLayout1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:layout_marginRight="5dip"
-            android:background="@drawable/balloon_r_selector"
+            android:background="@drawable/chat_bubble_blue_selector"
             android:clickable="true"
             android:minHeight="44.0dip" >
 
@@ -67,6 +65,16 @@
                 android:max="100"
                  android:visibility="gone"
                 android:progressDrawable="@drawable/progress_receivepic" />
+            <ImageView
+                android:id="@+id/more"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ic_more_vertical"
+                android:clickable="true"
+                android:scaleType="fitXY"
+                android:visibility="gone"
+                android:focusable="true"
+                android:src="@drawable/chat_item_icon_bg_selector" />
         </RelativeLayout>
 
         <ImageView
@@ -74,6 +82,7 @@
             android:layout_width="40.0dip"
             android:layout_height="40.0dip"
             android:layout_gravity="top"
+            android:visibility="gone"
             android:background="@drawable/default_portrait"
             android:clickable="true"
             android:focusable="true"

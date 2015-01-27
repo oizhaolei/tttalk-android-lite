@@ -23,7 +23,6 @@
         android:textColor="@color/chat_time"
         android:textSize="10.0sp"
         />
-        android:visibility="gone" 
 
     <ImageView
         android:id="@+id/icon"
@@ -37,14 +36,12 @@
         android:src="@drawable/chat_item_icon_bg_selector" />
 
     <RelativeLayout
-        android:id="@+id/relativeLayout1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/datetime"
         android:layout_marginLeft="5dip"
         android:layout_toRightOf="@id/icon"
-        android:background="@drawable/balloon_l_selector"
-        android:clickable="true"
+        android:background="@drawable/chat_bubble_white_selector"
         android:minHeight="44.0dip" >
 
         <TextView
@@ -69,6 +66,17 @@
             android:max="100"
             android:visibility="gone"
             android:progressDrawable="@drawable/progress_receivepic" />
+
+        <ImageView
+            android:id="@+id/more"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_more_vertical"
+            android:clickable="true"
+            android:layout_toRightOf="@+id/textView2"
+            android:scaleType="fitXY"
+            android:focusable="true"
+            android:src="@drawable/chat_item_icon_bg_selector" />
     </RelativeLayout>
 
 </RelativeLayout>
