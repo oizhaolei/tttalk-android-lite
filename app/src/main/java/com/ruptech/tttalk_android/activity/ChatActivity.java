@@ -111,8 +111,6 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.chat);
-        Toolbar toolbar = (Toolbar) this.findViewById(R.id.toolbar);
-        this.setSupportActionBar(toolbar);
 
         initData();// 初始化数据
         initView();// 初始化view

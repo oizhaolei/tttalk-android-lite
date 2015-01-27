@@ -26,6 +26,7 @@ import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.utils.XMPPUtils;
 import com.ruptech.tttalk_android.view.AddRosterItemDialog;
 import com.ruptech.tttalk_android.view.PagerItem;
+import com.ruptech.tttalk_android.view.SlidingTabLayout;
 import com.ruptech.tttalk_android.view.ViewPagerAdapter;
 
 import java.util.ArrayList;
@@ -34,11 +35,8 @@ import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import it.neokree.materialtabs.MaterialTab;
-import it.neokree.materialtabs.MaterialTabHost;
-import it.neokree.materialtabs.MaterialTabListener;
 
-public class MainActivity extends ActionBarActivity implements MaterialTabListener,
+public class MainActivity extends ActionBarActivity implements
         IConnectionStatusCallback, XXBroadcastReceiver.EventHandler {
 
     public static final String TAG = MainActivity.class.getSimpleName();
@@ -46,7 +44,7 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
     public static HashMap<String, Integer> mStatusMap;
 
     static {
-        mStatusMap = new HashMap<String, Integer>();
+        mStatusMap = new HashMap<>();
         mStatusMap.put(PrefUtils.OFFLINE, -1);
         mStatusMap.put(PrefUtils.DND, R.drawable.status_shield);
         mStatusMap.put(PrefUtils.XA, R.drawable.status_invisible);
@@ -56,8 +54,9 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
     }
 
     public static MainActivity instance = null;
-    @InjectView(R.id.tabHost)
-    MaterialTabHost tabHost;
+    @InjectView(R.id.sliding_tabs)
+    SlidingTabLayout mSlidingTabLayout;
+
     @InjectView(R.id.pager)
     ViewPager pager;
     long back_pressed;
@@ -172,7 +171,7 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
     }
 
     protected List<PagerItem> setupTabs() {
-        List<PagerItem> mTabs = new ArrayList<PagerItem>();
+        List<PagerItem> mTabs = new ArrayList<>();
 
         /**
          * Populate our tab list with tabs. Each item contains a title, indicator color and divider
@@ -197,47 +196,17 @@ public class MainActivity extends ActionBarActivity implements MaterialTabListen
     }
 
     @Override
-    public void onTabSelected(MaterialTab tab) {
-        pager.setCurrentItem(tab.getPosition());
-    }
-
-    @Override
-    public void onTabReselected(MaterialTab tab) {
-    }
-
-    @Override
-    public void onTabUnselected(MaterialTab tab) {
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
         instance = this;
 
-
-        Toolbar toolbar = (Toolbar) this.findViewById(R.id.toolbar);
-        this.setSupportActionBar(toolbar);
-
         // init view pager
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager(), setupTabs());
         pager.setAdapter(adapter);
-        pager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                // when user do a swipe the selected tab change
-                tabHost.setSelectedNavigationItem(position);
 
-            }
-        });
-        for (int i = 0; i < adapter.getCount(); i++) {
-            tabHost.addTab(
-                    tabHost.newTab()
-                            .setText(adapter.getPageTitle(i))
-                            .setTabListener(this)
-            );
-        }
+        mSlidingTabLayout.setViewPager(pager);
     }
 
     @Override

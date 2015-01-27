@@ -18,8 +18,6 @@ public class SettingsActivity extends ActionBarActivity {
         setContentView(R.layout.activity_setting);
         ButterKnife.inject(this);
 
-        Toolbar toolbar = (Toolbar) this.findViewById(R.id.toolbar);
-        this.setSupportActionBar(toolbar);
         String title = getString(R.string.action_settings);
         getSupportActionBar().setTitle(title);
 

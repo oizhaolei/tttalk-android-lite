@@ -261,7 +261,7 @@ public class ChatProvider extends ContentProvider {
         // acknowledged
 
         public static ArrayList<String> getRequiredColumns() {
-            ArrayList<String> tmpList = new ArrayList<String>();
+            ArrayList<String> tmpList = new ArrayList< >();
             tmpList.add(DATE);
             tmpList.add(DIRECTION);
             tmpList.add(JID);

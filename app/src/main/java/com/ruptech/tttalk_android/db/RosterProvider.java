@@ -298,7 +298,7 @@ public class RosterProvider extends ContentProvider {
         }
 
         public static ArrayList<String> getRequiredColumns() {
-            ArrayList<String> tmpList = new ArrayList<String>();
+            ArrayList<String> tmpList = new ArrayList< >();
             tmpList.add(JID);
             tmpList.add(ALIAS);
             tmpList.add(STATUS_MODE);

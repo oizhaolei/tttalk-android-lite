@@ -1,29 +1,20 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".main.MainActivity">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-         />
-
     <android.support.v4.view.ViewPager
         android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/tabHost"
-        android:layout_below="@+id/toolbar" />
+        android:layout_above="@+id/sliding_tabs" />
 
-    <it.neokree.materialtabs.MaterialTabHost
-        android:id="@+id/tabHost"
+    <com.ruptech.tttalk_android.view.SlidingTabLayout
+        android:id="@+id/sliding_tabs"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_alignParentBottom="true"
-        app:accentColor="@color/tab_accent_color"
-        app:primaryColor="@color/tab_primary_color" />
+        android:layout_height="wrap_content"
+
+        android:layout_alignParentBottom="true" />
 
 </RelativeLayout>
