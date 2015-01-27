@@ -7,8 +7,8 @@ android {
         applicationId "com.ruptech.tttalk_android"
         minSdkVersion 15
         targetSdkVersion 21
-        versionCode 2015012715
-        versionName '0.2'
+        versionCode 2015012717
+        versionName '0.3'
     }
     buildTypes {
         release {

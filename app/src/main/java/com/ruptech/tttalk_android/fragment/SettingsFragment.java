@@ -90,7 +90,7 @@ public class SettingsFragment extends Fragment implements OnClickListener,
         if (serverInfo.verCode > App.getAppVersionCode()) {
             notificateUpdateVersion(serverInfo);
         } else {
-            Toast.makeText(getActivity(),getActivity().getString(R.string.update_no_new_version), Toast.LENGTH_SHORT);
+            Toast.makeText(getActivity(),getActivity().getString(R.string.update_no_new_version), Toast.LENGTH_SHORT).show();
         }
     }
     @OnClick(R.id.set_about)

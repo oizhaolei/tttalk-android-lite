@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -27,6 +28,9 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.baidu.baidutranslate.openapi.TranslateClient;
+import com.baidu.baidutranslate.openapi.callback.ITransResultCallback;
+import com.baidu.baidutranslate.openapi.entity.TransResult;
 import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.adapter.ChatAdapter;
@@ -35,6 +39,7 @@ import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
 import com.ruptech.tttalk_android.db.RosterProvider;
 import com.ruptech.tttalk_android.service.IConnectionStatusCallback;
 import com.ruptech.tttalk_android.service.TTTalkService;
+import com.ruptech.tttalk_android.task.TaskParams;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.utils.StatusMode;
 import com.ruptech.tttalk_android.utils.XMPPUtils;
@@ -81,7 +86,14 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
         }
 
     };
+    private TranslateClient client;
+    // 【重要】 onCreate时候初始化翻译相关功能
+    private void initTransClient() {
+        client = new TranslateClient(this, App.properties.getProperty("baidu_api_key"));
 
+        // 这里可以设置为在线优先、离线优先、 只在线、只离线 4种模式，默认为在线优先。
+        client.setPriority(TranslateClient.Priority.OFFLINE_FIRST);
+    }
     /**
      * 解绑服务
      */
@@ -110,11 +122,14 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
+        initTransClient();// 初始化翻译相关功能
+
         initData();// 初始化数据
         initView();// 初始化view
         setChatWindowAdapter();// 初始化对话数据
         getContentResolver().registerContentObserver(
                 RosterProvider.CONTENT_URI, true, mContactObserver);// 开始监听联系人数据库
+
     }
 
     @Override
@@ -162,6 +177,10 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
         if (hasWindowFocus())
             unbindXMPPService();// 解绑服务
         getContentResolver().unregisterContentObserver(mContactObserver);
+
+        if (client != null) {
+            client.onDestroy();
+        }
     }
 
     @Override
@@ -193,7 +212,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
                 // ListAdapter adapter = new ChatWindowAdapter(cursor,
                 // PROJECTION_FROM, PROJECTION_TO, mWithJabberID);
                 ListAdapter adapter = new ChatAdapter(ChatActivity.this,
-                        cursor, PROJECTION_FROM);
+                        cursor, PROJECTION_FROM, client);
                 mMsgListView.setAdapter(adapter);
                 mMsgListView.setSelection(adapter.getCount() - 1);
             }

@@ -89,6 +89,7 @@
     <orderEntry type="library" exported="" name="support-v4-21.0.3" level="project" />
     <orderEntry type="library" exported="" name="butterknife-6.0.0" level="project" />
     <orderEntry type="library" exported="" name="otto-1.3.6" level="project" />
+    <orderEntry type="library" exported="" name="translate_openapi" level="project" />
     <orderEntry type="library" exported="" name="asmack-android-6" level="project" />
   </component>
 </module>
