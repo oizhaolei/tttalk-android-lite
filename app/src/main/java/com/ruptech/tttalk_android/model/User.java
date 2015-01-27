@@ -1,44 +1,33 @@
 package com.ruptech.tttalk_android.model;
 
-import java.io.Serializable;
+public class User extends Roster {
+    private static final long serialVersionUID = 6503913403445783857L;
 
-public class User implements Serializable {
-    private static final long serialVersionUID = 6659682256959703673L;
-    private String jid;
-    private String alias;
-    private String statusMode;
-    private String statusMessage;
+    String account;
+    String password;
+    String lang;
 
-    public String getJid() {
-        return jid;
+    public String getAccount() {
+        return account;
     }
 
-    public void setJid(String jid) {
-        this.jid = jid;
+    public void setAccount(String account) {
+        this.account = account;
     }
 
-    public String getAlias() {
-        return alias;
+    public String getPassword() {
+        return password;
     }
 
-    public void setAlias(String alias) {
-        this.alias = alias;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
-    public String getStatusMode() {
-        return statusMode;
+    public String getLang() {
+        return lang;
     }
 
-    public void setStatusMode(String statusMode) {
-        this.statusMode = statusMode;
+    public void setLang(String lang) {
+        this.lang = lang;
     }
-
-    public String getStatusMessage() {
-        return statusMessage;
-    }
-
-    public void setStatus_message(String statusMessage) {
-        this.statusMessage = statusMessage;
-    }
-
 }

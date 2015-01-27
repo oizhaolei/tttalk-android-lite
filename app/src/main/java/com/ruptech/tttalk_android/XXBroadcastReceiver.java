@@ -31,9 +31,7 @@ public class XXBroadcastReceiver extends BroadcastReceiver {
             Intent xmppServiceIntent = new Intent(context, TTTalkService.class);
             context.stopService(xmppServiceIntent);
         } else {
-            if (!TextUtils.isEmpty(PrefUtils.getPrefString(
-                    PrefUtils.PASSWORD, ""))
-                    && PrefUtils.getPrefBoolean(
+            if (PrefUtils.getPrefBoolean(
                     PrefUtils.AUTO_START, true)) {
                 Intent i = new Intent(context, TTTalkService.class);
                 i.setAction(BOOT_COMPLETED_ACTION);

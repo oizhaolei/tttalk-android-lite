@@ -40,7 +40,7 @@ public class AddRosterItemDialog extends AlertDialog implements
 
         LayoutInflater inflater = (LayoutInflater) mainActivity
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View group = inflater.inflate(R.layout.addrosteritemdialog, null, false);
+        View group = inflater.inflate(R.layout.dialog_addrosteritem, null, false);
         setView(group);
 
         userInputField = (EditText) group.findViewById(R.id.AddContact_EditTextField);

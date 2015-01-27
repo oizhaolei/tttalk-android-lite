@@ -403,6 +403,7 @@
                     android:focusable="true" >
 
                     <TextView
+                        android:id="@+id/set_about_textview"
                         style="@style/B4_Font_white"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -410,7 +411,7 @@
                         android:layout_marginLeft="12.0dip"
                         android:duplicateParentState="true"
                         android:gravity="center_vertical"
-                        android:text="关于" />
+                        android:text="@string/version" />
 
                     <ImageView
                         android:layout_width="14.0dip"

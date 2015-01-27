@@ -19,6 +19,7 @@ import android.widget.TextView;
 import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.BuildConfig;
 import com.ruptech.tttalk_android.R;
+import com.ruptech.tttalk_android.model.User;
 import com.ruptech.tttalk_android.service.IConnectionStatusCallback;
 import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.PrefUtils;
@@ -36,12 +37,14 @@ public class LoginActivity extends ActionBarActivity implements
     public static final String LOGIN_ACTION = "com.ruptech.tttalk_android.action.LOGIN";
     private static final String TAG = LoginActivity.class.getName();
     // UI references.
-    @InjectView(R.id.server)
+    @InjectView(R.id.server_edittext)
     EditText mServerView;
-    @InjectView(R.id.username)
+    @InjectView(R.id.username_edittext)
     EditText mUsernameView;
-    @InjectView(R.id.password)
+    @InjectView(R.id.password_edittext)
     EditText mPasswordView;
+    @InjectView(R.id.lang_edittext)
+    EditText mLangView;
     private TTTalkService mService;
     ServiceConnection mServiceConnection = new ServiceConnection() {
 
@@ -60,8 +63,6 @@ public class LoginActivity extends ActionBarActivity implements
 
     };
     private ProgressDialog progressDialog;
-    private String username;
-    private String password;
 
     private void gotoMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
@@ -101,10 +102,15 @@ public class LoginActivity extends ActionBarActivity implements
             }
         });
 
-        if (BuildConfig.DEBUG) {
-            mServerView.setText(App.properties.getProperty("test.server"));
+        //TODO: encrypt password
+        mServerView.setText(App.properties.getProperty("test.server"));
+        if (App.readUser() == null) {
             mUsernameView.setText(App.properties.getProperty("test.username"));
             mPasswordView.setText(App.properties.getProperty("test.password"));
+        } else {
+            mUsernameView.setText(App.readUser().getAccount());
+            mPasswordView.setText(App.readUser().getPassword());
+            mLangView.setText(App.readUser().getLang());
         }
     }
 
@@ -115,7 +121,7 @@ public class LoginActivity extends ActionBarActivity implements
 
     @OnClick(R.id.username_sign_up_button)
     public void doSignUp() {
-        //TODO
+        //TODO : create account, register
     }
 
     /**
@@ -128,11 +134,13 @@ public class LoginActivity extends ActionBarActivity implements
         // Reset errors.
         mUsernameView.setError(null);
         mPasswordView.setError(null);
+        mLangView.setError(null);
 
         // Store values at the time of the login attempt.
         String server = mServerView.getText().toString();
-        username = mUsernameView.getText().toString();
-        password = mPasswordView.getText().toString();
+        String username = mUsernameView.getText().toString();
+        String password = mPasswordView.getText().toString();
+        String lang = mLangView.getText().toString();
 
         boolean cancel = false;
         View focusView = null;
@@ -140,7 +148,7 @@ public class LoginActivity extends ActionBarActivity implements
 
         // Check for a valid password, if the user entered one.
         if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
+            mPasswordView.setError(getString(R.string.error_invalid));
             focusView = mPasswordView;
             cancel = true;
         }
@@ -151,8 +159,12 @@ public class LoginActivity extends ActionBarActivity implements
             focusView = mUsernameView;
             cancel = true;
         } else if (!isUsernameValid(username)) {
-            mUsernameView.setError(getString(R.string.error_invalid_username));
+            mUsernameView.setError(getString(R.string.error_invalid));
             focusView = mUsernameView;
+            cancel = true;
+        } else if (!isLangValid(lang)) {
+            mLangView.setError(getString(R.string.error_invalid));
+            focusView = mLangView;
             cancel = true;
         }
 
@@ -161,6 +173,13 @@ public class LoginActivity extends ActionBarActivity implements
             // form field with an error.
             focusView.requestFocus();
         } else {
+            User me = new User();
+            me.setAccount(username);
+            me.setPassword(password);
+            me.setLang(lang);
+            App.saveUser(me);
+            PrefUtils.setPrefString(PrefUtils.Server, server);
+
 
             progressDialog = ProgressDialog.show(LoginActivity.this,
                     LoginActivity.this.getString(R.string.progress_title),
@@ -168,7 +187,6 @@ public class LoginActivity extends ActionBarActivity implements
 
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            PrefUtils.setPrefString(PrefUtils.Server, server);
             mService.login(username, password);
 
 //            mAuthTask = new UserLoginTask(username, password);
@@ -178,6 +196,10 @@ public class LoginActivity extends ActionBarActivity implements
 
     private boolean isUsernameValid(String username) {
         return username.length() > 1;
+    }
+
+    private boolean isLangValid(String lang) {
+        return lang.length() > 1;
     }
 
     private boolean isPasswordValid(String password) {
@@ -196,10 +218,6 @@ public class LoginActivity extends ActionBarActivity implements
     }
 
     private void save2Preferences() {
-        PrefUtils.setPrefString(PrefUtils.ACCOUNT,
-                username);// 帐号是一直保存的
-        PrefUtils.setPrefString(PrefUtils.PASSWORD,
-                password);
 
         PrefUtils.setPrefString(
                 PrefUtils.STATUS_MODE,

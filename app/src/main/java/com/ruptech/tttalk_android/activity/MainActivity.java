@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.XXBroadcastReceiver;
 import com.ruptech.tttalk_android.fragment.FriendListFragment;
@@ -69,17 +70,16 @@ public class MainActivity extends ActionBarActivity implements
             mService.registerConnectionStatusCallback(MainActivity.this);
             // 开始连接xmpp服务器
             if (!mService.isAuthenticated()) {
-                String usr = PrefUtils.getPrefString(
-                        PrefUtils.ACCOUNT, "");
-                String password = PrefUtils.getPrefString(PrefUtils.PASSWORD, "");
-                mService.login(usr, password);
+                String account = App.readUser().getAccount();
+                String password = App.readUser().getPassword();
+
+                mService.login(account, password);
                 getSupportActionBar().setTitle(R.string.login_prompt_msg);
                 // setStatusImage(false);
                 // mTitleProgressBar.setVisibility(View.VISIBLE);
             } else {
                 getSupportActionBar().setTitle(XMPPUtils
-                        .splitJidAndServer(PrefUtils.getPrefString(PrefUtils.ACCOUNT,
-                                "")));
+                        .splitJidAndServer( App.readUser().getAccount()));
             }
         }
 
@@ -108,9 +108,7 @@ public class MainActivity extends ActionBarActivity implements
     public void connectionStatusChanged(int connectedState, String reason) {
         switch (connectedState) {
             case TTTalkService.CONNECTED:
-                getSupportActionBar().setTitle(XMPPUtils.splitJidAndServer(PrefUtils
-                        .getPrefString(
-                                PrefUtils.ACCOUNT, "")));
+                getSupportActionBar().setTitle(XMPPUtils.splitJidAndServer(App.readUser().getAccount()));
                 break;
             case TTTalkService.CONNECTING:
                 getSupportActionBar().setTitle(R.string.login_prompt_msg);

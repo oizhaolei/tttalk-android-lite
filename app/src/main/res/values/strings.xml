@@ -10,8 +10,7 @@
     <string name="action_sign_up">Sign up</string>
     <string name="action_sign_in_short">Sign in</string>
 
-    <string name="error_invalid_username">This username is invalid</string>
-    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_invalid">invalid</string>
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_field_required">This field is required</string>
 
@@ -1366,5 +1365,9 @@
     <string name="recent_chat_fragment_title">最近会话</string>
     <string name="app_version">V1.0.0</string>
     <string name="tab_title_friends">朋友</string>
+    <string name="version">版本</string>
+    <string name="app_update">版本更新</string>
+    <string name="prompt_lang">EN,KR,CN,JP,ID,TL,VI,TH,af,sq,ar,az,eu,bn,be,bg,ca,hr,cs,da,nl,eo,et,fi,fr,gl,ka,de,el,gu,ht,iw,hi,hu,is,ga,it,kn,la,lv,lt,mk,ms,mt,no,fa,pl,pt,ro,ru,sr,sk,sl,es,sw,sv,ta,te,tr,uk,ur,cy</string>
+    <string name="update_no_new_version">没有新版本</string>
 
 </resources>

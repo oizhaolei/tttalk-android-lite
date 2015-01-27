@@ -144,10 +144,8 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
                 && intent.getAction() != null
                 && TextUtils.equals(intent.getAction(),
                 XXBroadcastReceiver.BOOT_COMPLETED_ACTION)) {
-            String account = PrefUtils.getPrefString(
-                    PrefUtils.ACCOUNT, "");
-            String password = PrefUtils.getPrefString(
-                    PrefUtils.PASSWORD, "");
+            String account = App.readUser().getAccount();
+            String password = App.readUser().getPassword();
             if (!TextUtils.isEmpty(account) && !TextUtils.isEmpty(password))
                 login(account, password);
         }
@@ -356,10 +354,8 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
             return;
         }
 
-        String account = PrefUtils.getPrefString(
-                PrefUtils.ACCOUNT, "");
-        String password = PrefUtils.getPrefString(
-                PrefUtils.PASSWORD, "");
+        String account = App.readUser().getAccount();
+        String password = App.readUser().getPassword();
         // 无保存的帐号密码时，也直接返回
         if (TextUtils.isEmpty(account) || TextUtils.isEmpty(password)) {
             Log.d(TAG, "account = null || password = null");
@@ -475,8 +471,8 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
         if (!PrefUtils.getPrefBoolean(
                 PrefUtils.FOREGROUND, true))
             return;
-        String title = PrefUtils.getPrefString(
-                PrefUtils.ACCOUNT, "");
+        String title  = App.readUser().getAccount();
+
         Notification n = new Notification(R.drawable.default_portrait,
                 title, System.currentTimeMillis());
         n.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
@@ -522,10 +518,10 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
         }
         if (isAuthenticated())// 如果已经连接上，直接返回
             return;
-        String account = PrefUtils.getPrefString(
-                PrefUtils.ACCOUNT, "");
-        String password = PrefUtils.getPrefString(
-                PrefUtils.PASSWORD, "");
+
+        String account = App.readUser().getAccount();
+        String password = App.readUser().getPassword();
+
         if (TextUtils.isEmpty(account) || TextUtils.isEmpty(password))// 如果没有帐号，也直接返回
             return;
         if (!PrefUtils.getPrefBoolean(
@@ -580,7 +576,7 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
 
     private Smack createSmack() {
         if (App.mSmack == null)
-            App.mSmack = new SmackImpl(TTTalkService.this, TTTalkService.this, getContentResolver());
+            App.mSmack = new SmackImpl(App.readUser(), TTTalkService.this, TTTalkService.this, getContentResolver());
         return App.mSmack;
     }
 
@@ -639,10 +635,9 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
                 Log.d(TAG, "Reconnect attempt aborted: we are connected again!");
                 return;
             }
-            String account = PrefUtils.getPrefString(
-                    PrefUtils.ACCOUNT, "");
-            String password = PrefUtils.getPrefString(
-                    PrefUtils.PASSWORD, "");
+            String account = App.readUser().getAccount();
+            String password = App.readUser().getPassword();
+
             if (TextUtils.isEmpty(account) || TextUtils.isEmpty(password)) {
                 Log.d(TAG, "account = null || password = null");
                 return;

@@ -29,7 +29,7 @@ public class GroupNameView extends LinearLayout implements OnItemSelectedListene
         super(ctx, attrs);
 
         ((LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
-                .inflate(R.layout.groupnameview, this);
+                .inflate(R.layout.item_groupname, this);
 
         mContext = ctx;
         mGroupSpinner = (Spinner) findViewById(R.id.groupspinner);

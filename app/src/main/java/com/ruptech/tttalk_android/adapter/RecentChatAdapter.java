@@ -75,7 +75,7 @@ public class RecentChatAdapter extends SimpleCursorAdapter {
                 || convertView.getTag(R.mipmap.ic_launcher
                 + (int) dateMilliseconds) == null) {
             convertView = mLayoutInflater.inflate(
-                    R.layout.recent_listview_item, parent, false);
+                    R.layout.item_recent_chat, parent, false);
             viewHolder = new ViewHolder(convertView);
 
             convertView.setTag(R.mipmap.ic_launcher + (int) dateMilliseconds,

@@ -4,7 +4,6 @@ import android.app.Application;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.util.Log;
 
 import com.ruptech.tttalk_android.activity.MainActivity;
@@ -31,13 +30,13 @@ public class App extends Application implements
     private static User user;
 
     public static int getAppVersionCode() {
-        int verCode = 0;
+        int verCode = Integer.MAX_VALUE;
         try {
             PackageInfo packageInfo = App.mContext.getPackageManager()
                     .getPackageInfo(App.mContext.getPackageName(), 0);
             verCode = packageInfo.versionCode;
 
-        } catch (PackageManager.NameNotFoundException e) {
+        } catch (Exception e) {
             if (BuildConfig.DEBUG)
                 Log.e(TAG, e.getMessage(), e);
         }

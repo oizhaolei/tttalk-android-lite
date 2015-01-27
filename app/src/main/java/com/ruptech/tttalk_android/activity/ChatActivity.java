@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -28,6 +27,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.adapter.ChatAdapter;
 import com.ruptech.tttalk_android.db.ChatProvider;
@@ -68,10 +68,8 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
             mXxService.registerConnectionStatusCallback(ChatActivity.this);
             // 如果没有连接上，则重新连接xmpp服务器
             if (!mXxService.isAuthenticated()) {
-                String usr = PrefUtils.getPrefString(
-                        PrefUtils.ACCOUNT, "");
-                String password = PrefUtils.getPrefString(
-                        PrefUtils.PASSWORD, "");
+                String usr = App.readUser().getAccount();
+                String password = App.readUser().getPassword();
                 mXxService.login(usr, password);
             }
         }
@@ -110,7 +108,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.chat);
+        setContentView(R.layout.activity_chat);
 
         initData();// 初始化数据
         initView();// 初始化view

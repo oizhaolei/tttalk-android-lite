@@ -96,6 +96,9 @@ public abstract class HttpConnection {
             Log.i(TAG, url);
         }
         String body = HttpRequest.get(url).body();
+        if (BuildConfig.DEBUG) {
+            Log.i(TAG, body);
+        }
 
         return new Response(body);
     }
@@ -151,6 +154,8 @@ public abstract class HttpConnection {
         Response response = post(url, params);
         return response;
     }
+
+
 
     class Response {
         private final String TAG = Response.class.getSimpleName();

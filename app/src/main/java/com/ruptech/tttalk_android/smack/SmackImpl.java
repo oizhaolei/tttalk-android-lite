@@ -7,12 +7,14 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
+import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.db.ChatProvider;
 import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
 import com.ruptech.tttalk_android.db.RosterProvider;
 import com.ruptech.tttalk_android.db.RosterProvider.RosterConstants;
 import com.ruptech.tttalk_android.exception.XMPPException;
+import com.ruptech.tttalk_android.model.User;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.utils.StatusMode;
 import com.ruptech.tttalk_android.utils.XMPPUtils;
@@ -74,6 +76,7 @@ public class SmackImpl implements Smack {
 
     private final ContentResolver mContentResolver;
     private final Context mContext;
+    private final User mUser;
     private ConnectionConfiguration mXMPPConfig;
     private XMPPConnection mXMPPConnection;
     private SmackListener mSmackListener;
@@ -86,7 +89,7 @@ public class SmackImpl implements Smack {
     private String mPingID;
     private long mPingTimestamp;
 
-    public SmackImpl(Context context, SmackListener listener, ContentResolver contentResolver) {
+    public SmackImpl(User user, Context context, SmackListener listener, ContentResolver contentResolver) {
         int port = PrefUtils.getPrefInt(
                 PrefUtils.PORT, PrefUtils.DEFAULT_PORT_INT);
         String server = PrefUtils.getPrefString(
@@ -111,6 +114,7 @@ public class SmackImpl implements Smack {
         }
         this.mXMPPConnection = new XMPPConnection(mXMPPConfig);
         this.mContext = context;
+        this.mUser = user;
         this.mSmackListener = listener;
         mContentResolver = contentResolver;
     }

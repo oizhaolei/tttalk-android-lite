@@ -52,7 +52,7 @@ public class RosterAdapter extends ArrayAdapter<Roster> {
     private static final String[] ROSTER_QUERY = new String[]{
             RosterConstants._ID, RosterConstants.JID, RosterConstants.ALIAS,
             RosterConstants.STATUS_MODE, RosterConstants.STATUS_MESSAGE,};
-    private static final int resource = R.layout.contact_list_item_for_buddy;
+    private static final int resource = R.layout.item_contact_list;
     private final Context mContext;
     private ContentResolver mContentResolver;
     private LayoutInflater mInflater;
@@ -101,7 +101,7 @@ public class RosterAdapter extends ArrayAdapter<Roster> {
                 || view.getTag(R.mipmap.ic_launcher + presenceMode) == null) {
             Log.i(TAG, "new  child ");
             view = mInflater.inflate(
-                    R.layout.contact_list_item_for_buddy, parent, false);
+                    R.layout.item_contact_list, parent, false);
             holder = new ViewHolder(view);
 
             view.setTag(R.mipmap.ic_launcher + presenceMode, holder);
