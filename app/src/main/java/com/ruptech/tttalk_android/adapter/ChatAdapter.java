@@ -1,7 +1,9 @@
 package com.ruptech.tttalk_android.adapter;
 
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
@@ -19,11 +21,22 @@ import com.baidu.baidutranslate.openapi.TranslateClient;
 import com.baidu.baidutranslate.openapi.callback.ITransResultCallback;
 import com.baidu.baidutranslate.openapi.entity.TransResult;
 import com.ruptech.tttalk_android.R;
+import com.ruptech.tttalk_android.activity.ChatActivity;
 import com.ruptech.tttalk_android.db.ChatProvider;
 import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
+import com.ruptech.tttalk_android.model.Chat;
+import com.ruptech.tttalk_android.service.TTTalkService;
+import com.ruptech.tttalk_android.smack.FromLang;
+import com.ruptech.tttalk_android.smack.OriginId;
+import com.ruptech.tttalk_android.smack.ToLang;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.utils.TimeUtil;
 import com.ruptech.tttalk_android.utils.XMPPUtils;
+
+import org.jivesoftware.smack.packet.PacketExtension;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -33,10 +46,10 @@ public class ChatAdapter extends SimpleCursorAdapter {
 
     private static final int DELAY_NEWMSG = 2000;
     private final TranslateClient mClient;
-    private Context mContext;
+    private ChatActivity mContext;
     private LayoutInflater mInflater;
 
-    public ChatAdapter(Context context, Cursor cursor, String[] from, TranslateClient client) {
+    public ChatAdapter(ChatActivity context, Cursor cursor, String[] from, TranslateClient client) {
         // super(context, android.R.layout.simple_list_item_1, cursor, from,
         // to);
         super(context, 0, cursor, from, null);
@@ -45,7 +58,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
         mInflater = LayoutInflater.from(context);
     }
 
-    public void translate(String content, String fromLang, String toLang) {
+    public void baiduTranslate(String content, String fromLang, String toLang) {
 
         if (TextUtils.isEmpty(content))
             return;
@@ -78,22 +91,27 @@ public class ChatAdapter extends SimpleCursorAdapter {
         Cursor cursor = this.getCursor();
         cursor.moveToPosition(position);
 
-        long dateMilliseconds = cursor.getLong(cursor
-                .getColumnIndex(ChatProvider.ChatConstants.DATE));
+        Chat chat = new Chat();
+        chat .setDate(cursor.getLong(cursor
+                .getColumnIndex(ChatProvider.ChatConstants.DATE)));
 
-        int _id = cursor.getInt(cursor
-                .getColumnIndex(ChatProvider.ChatConstants._ID));
-        String date = TimeUtil.getChatTime(dateMilliseconds);
-        String message = cursor.getString(cursor
-                .getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
-        int come = cursor.getInt(cursor
-                .getColumnIndex(ChatProvider.ChatConstants.DIRECTION));// 消息来自
-        boolean from_me = (come == ChatConstants.OUTGOING);
-        String jid = cursor.getString(cursor
-                .getColumnIndex(ChatProvider.ChatConstants.JID));
-        int delivery_status = cursor.getInt(cursor
-                .getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS));
-        ViewHolder viewHolder;
+        chat.setId(cursor.getInt(cursor
+                .getColumnIndex(ChatProvider.ChatConstants._ID)));
+        chat.setMessage(cursor.getString(cursor
+                .getColumnIndex(ChatProvider.ChatConstants.MESSAGE)));
+        chat.setFromMe(cursor.getInt(cursor
+                .getColumnIndex(ChatProvider.ChatConstants.DIRECTION)));// 消息来自
+        chat.setJid(cursor.getString(cursor
+                .getColumnIndex(ChatProvider.ChatConstants.JID)));
+        chat.setPid( cursor.getString(cursor
+                .getColumnIndex(ChatConstants.PACKET_ID)));
+        chat.setRead( cursor.getInt(cursor
+                .getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS)));
+
+        boolean from_me = (chat.getFromMe() == ChatConstants.OUTGOING);
+        int come = chat.getFromMe();
+
+                ViewHolder viewHolder;
         if (convertView == null
                 || convertView.getTag(R.mipmap.ic_launcher + come) == null) {
             if (come == ChatConstants.OUTGOING) {
@@ -111,11 +129,11 @@ public class ChatAdapter extends SimpleCursorAdapter {
                     + come);
         }
 
-        if (!from_me && delivery_status == ChatConstants.DS_NEW) {
-            markAsReadDelayed(_id, DELAY_NEWMSG);
+        if (!from_me && chat.getRead() == ChatConstants.DS_NEW) {
+            markAsReadDelayed(chat.getId(), DELAY_NEWMSG);
         }
 
-        bindViewData(viewHolder, date, from_me, jid, message, delivery_status);
+        bindViewData(viewHolder, from_me,  chat);
         return convertView;
     }
 
@@ -142,8 +160,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
         mContext.getContentResolver().update(rowuri, values, null, null);
     }
 
-    private void bindViewData(ViewHolder holder, String date, boolean from_me,
-                              String from, String message, int delivery_status) {
+    private void bindViewData(ViewHolder holder, boolean from_me,  Chat chat) {
         holder.avatar.setBackgroundResource(R.drawable.default_portrait);
         if (from_me
                 && !PrefUtils.getPrefBoolean(
@@ -151,29 +168,57 @@ public class ChatAdapter extends SimpleCursorAdapter {
             holder.avatar.setVisibility(View.GONE);
         }
         CharSequence text = XMPPUtils.convertNormalStringToSpannableString(
-                mContext, message, false);
+                mContext, chat.getMessage(), false);
         holder.content.setText(text);
-        holder.contentMenu.setTag(text);
+        holder.contentLayout.setTag(chat);
+
+        String date = TimeUtil.getChatTime(chat.getDate());
         holder.time.setText(date);
     }
 
     private ViewHolder buildHolder(View convertView) {
         final ViewHolder holder = new ViewHolder(convertView);
-        holder.contentMenu.setOnClickListener(new View.OnClickListener() {
+        holder.contentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String content = (String) holder.contentMenu.getTag();
-                translate(content, "zh", "en");
+                AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+                DialogInterface.OnClickListener positiveListener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Chat chat = (Chat) holder.contentLayout.getTag();
+                        switch (which) {
+                            case 0://R.string.auto_translate:
+                                baiduTranslate(chat.getMessage(), "zh", "en");
+                                break;
+                            case 1://R.string.human_translate:
+                                requestTTTalkTranslate(chat, "CN", "EN");
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                };
+                builder.setItems(R.array.chat_action, positiveListener);
+                builder.create().show();
             }
         });
 
         return holder;
     }
 
+    private void requestTTTalkTranslate(Chat chat, String fromLang, String toLang) {
+        Collection<PacketExtension> extensions = new ArrayList<>();
+        extensions.add(new FromLang(fromLang));
+        extensions.add(new ToLang(toLang));
+        extensions.add(new OriginId(chat.getPid()));
+
+        mContext.getService().sendMessage("tttalk.translator@tttalk.org", chat.getMessage(), extensions);
+    }
+
     static class ViewHolder {
-        @InjectView(R.id.more)
-        View contentMenu;
-        @InjectView(R.id.textView2)
+        @InjectView(R.id.content_view)
+        View contentLayout;
+        @InjectView(R.id.content_textView)
         TextView content;
         @InjectView(R.id.datetime)
         TextView time;

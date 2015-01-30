@@ -213,18 +213,7 @@ public class ChatProvider extends ContentProvider {
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            infoLog("onUpgrade: from " + oldVersion + " to " + newVersion);
-            switch (oldVersion) {
-                case 3:
-                    db.execSQL("UPDATE " + TABLE_NAME + " SET READ=1");
-                case 4:
-                    db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD "
-                            + ChatConstants.PACKET_ID + " TEXT");
-                    break;
-                default:
-                    db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
-                    onCreate(db);
-            }
+
         }
 
     }

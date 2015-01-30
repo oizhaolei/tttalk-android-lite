@@ -1369,5 +1369,10 @@
     <string name="app_update">版本更新</string>
     <string name="prompt_lang">EN,KR,CN,JP,ID,TL,VI,TH,af,sq,ar,az,eu,bn,be,bg,ca,hr,cs,da,nl,eo,et,fi,fr,gl,ka,de,el,gu,ht,iw,hi,hu,is,ga,it,kn,la,lv,lt,mk,ms,mt,no,fa,pl,pt,ro,ru,sr,sk,sl,es,sw,sv,ta,te,tr,uk,ur,cy</string>
     <string name="update_no_new_version">没有新版本</string>
-
+    <string name="auto_translate">自动翻译</string>
+    <string name="human_translate">人工翻译</string>
+    <string-array name="chat_action">
+        <item>@string/auto_translate</item>
+        <item>@string/human_translate</item>
+    </string-array>
 </resources>

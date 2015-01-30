@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
-import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.db.ChatProvider;
 import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
@@ -33,6 +32,7 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Presence.Mode;
 import org.jivesoftware.smack.provider.ProviderManager;
@@ -98,6 +98,12 @@ public class SmackImpl implements Smack {
                 PrefUtils.SMACKDEBUG, false);
         boolean requireSsl = PrefUtils.getPrefBoolean(
                 PrefUtils.REQUIRE_TLS, false);
+
+        ProviderManager.getInstance().addExtensionProvider(FromLang.ELEMENT_NAME, FromLang.NAMESPACE, new FromLang.Provider());
+        ProviderManager.getInstance().addExtensionProvider(ToLang.ELEMENT_NAME, ToLang.NAMESPACE, new ToLang.Provider());
+        ProviderManager.getInstance().addExtensionProvider(Cost.ELEMENT_NAME, Cost.NAMESPACE, new Cost.Provider());
+        ProviderManager.getInstance().addExtensionProvider(OriginId.ELEMENT_NAME, OriginId.NAMESPACE, new OriginId.Provider());
+
         this.mXMPPConfig = new ConnectionConfiguration(server, port);
 
         this.mXMPPConfig.setReconnectionAllowed(false);
@@ -796,11 +802,15 @@ public class SmackImpl implements Smack {
     }
 
     @Override
-    public void sendMessage(String toJID, String message) {
+    public void sendMessage(String toJID, String message, Collection<PacketExtension> extensions) {
 
         final Message newMessage = new Message(toJID, Message.Type.chat);
         newMessage.setBody(message);
         newMessage.addExtension(new DeliveryReceiptRequest());
+        for (PacketExtension extension : extensions) {
+            newMessage.addExtension(extension);
+        }
+
         if (isAuthenticated()) {
             addChatMessageToDB(ChatConstants.OUTGOING, toJID, message,
                     ChatConstants.DS_SENT_OR_READ, System.currentTimeMillis(),

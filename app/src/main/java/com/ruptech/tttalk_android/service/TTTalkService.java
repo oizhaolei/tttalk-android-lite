@@ -32,7 +32,10 @@ import com.ruptech.tttalk_android.smack.SmackListener;
 import com.ruptech.tttalk_android.utils.NetUtil;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 
+import org.jivesoftware.smack.packet.PacketExtension;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
@@ -233,9 +236,9 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
     }
 
     // 发送消息
-    public void sendMessage(String user, String message) {
+    public void sendMessage(String user, String message, Collection<PacketExtension> extensions) {
         if (App.mSmack != null)
-            App.mSmack.sendMessage(user, message);
+            App.mSmack.sendMessage(user, message, extensions);
         else
             SmackImpl.sendOfflineMessage(getContentResolver(), user, message);
     }

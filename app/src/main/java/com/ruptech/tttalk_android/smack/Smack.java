@@ -2,6 +2,10 @@ package com.ruptech.tttalk_android.smack;
 
 import com.ruptech.tttalk_android.exception.XMPPException;
 
+import org.jivesoftware.smack.packet.PacketExtension;
+
+import java.util.Collection;
+
 public interface Smack {
     public boolean login(String account, String password) throws XMPPException;
 
@@ -28,7 +32,7 @@ public interface Smack {
 
     public void setStatusFromConfig();
 
-    public void sendMessage(String user, String message);
+    public void sendMessage(String user, String message, Collection<PacketExtension> extensions);
 
     public void sendServerPing();
 
