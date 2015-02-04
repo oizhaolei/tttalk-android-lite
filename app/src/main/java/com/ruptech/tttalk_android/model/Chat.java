@@ -8,9 +8,9 @@ public class Chat implements Serializable {
     protected long date;
     protected int fromMe;
     protected int read;
-    protected String  jid;
-    protected String  message;
-    protected String  pid;
+    protected String jid;
+    protected String message;
+    protected String pid;
 
     public int getId() {
         return id;

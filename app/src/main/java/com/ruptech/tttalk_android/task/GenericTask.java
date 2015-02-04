@@ -36,6 +36,10 @@ public abstract class GenericTask extends AsyncTask<TaskParams, Object, TaskResu
         return mListener;
     }
 
+    public void setListener(TaskListener taskListener) {
+        mListener = taskListener;
+    }
+
     public String getMsg() {
         return msg;
     }
@@ -87,10 +91,6 @@ public abstract class GenericTask extends AsyncTask<TaskParams, Object, TaskResu
 
     public void setCancelable(boolean flag) {
         isCancelable = flag;
-    }
-
-    public void setListener(TaskListener taskListener) {
-        mListener = taskListener;
     }
 
     @Override

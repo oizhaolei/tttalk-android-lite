@@ -3,7 +3,6 @@ package com.ruptech.tttalk_android.activity;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.widget.Toolbar;
 
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.fragment.SettingsFragment;
@@ -23,7 +22,7 @@ public class SettingsActivity extends ActionBarActivity {
 
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.sample_content_fragment, SettingsFragment.newInstance());
+            transaction.replace(R.id.sample_content_fragment, new SettingsFragment());
             transaction.commit();
         }
     }

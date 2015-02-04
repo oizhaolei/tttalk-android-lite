@@ -19,6 +19,8 @@ import com.ruptech.tttalk_android.exception.AdressMalformedException;
 import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.XMPPUtils;
 
+import butterknife.ButterKnife;
+
 public class AddRosterItemDialog extends AlertDialog implements
         DialogInterface.OnClickListener, TextWatcher {
 
@@ -42,11 +44,12 @@ public class AddRosterItemDialog extends AlertDialog implements
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View group = inflater.inflate(R.layout.dialog_addrosteritem, null, false);
         setView(group);
+        ButterKnife.inject(this, group);
 
-        userInputField = (EditText) group.findViewById(R.id.AddContact_EditTextField);
-        aliasInputField = (EditText) group.findViewById(R.id.AddContactAlias_EditTextField);
+        userInputField = (EditText) ButterKnife.findById(group, R.id.AddContact_EditTextField);
+        aliasInputField = (EditText) ButterKnife.findById(group, R.id.AddContactAlias_EditTextField);
 
-        mGroupNameView = (GroupNameView) group.findViewById(R.id.AddRosterItem_GroupName);
+        mGroupNameView = (GroupNameView) ButterKnife.findById(group, R.id.AddRosterItem_GroupName);
         mGroupNameView.setGroupList(mService.getRosterGroups());
 
         setButton(BUTTON_POSITIVE, mainActivity.getString(android.R.string.ok), this);

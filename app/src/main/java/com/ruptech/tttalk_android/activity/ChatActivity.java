@@ -38,6 +38,9 @@ import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.StatusMode;
 import com.ruptech.tttalk_android.utils.XMPPUtils;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+
 public class ChatActivity extends ActionBarActivity implements OnTouchListener,
         OnClickListener, IConnectionStatusCallback {
     public static final String INTENT_EXTRA_USERNAME = ChatActivity.class
@@ -53,9 +56,12 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
     private static final String[] STATUS_QUERY = new String[]{
             RosterProvider.RosterConstants.STATUS_MODE,
             RosterProvider.RosterConstants.STATUS_MESSAGE,};
-    private ListView mMsgListView;// 对话ListView
-    private Button mSendMsgBtn;// 发送消息button
-    private EditText mChatEditText;// 消息输入框
+    @InjectView(R.id.msg_listView)
+    ListView mMsgListView;// 对话ListView
+    @InjectView(R.id.send)
+    Button mSendMsgBtn;// 发送消息button
+    @InjectView(R.id.input)
+    EditText mChatEditText;// 消息输入框
     private InputMethodManager mInputMethodManager;
     private String mWithJabberID = null;// 当前聊天用户的ID
     private ContentObserver mContactObserver = new ContactObserver();// 联系人数据监听，主要是监听对方在线状态
@@ -82,6 +88,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
 
     };
     private TranslateClient client;
+
     // 【重要】 onCreate时候初始化翻译相关功能
     private void initTransClient() {
         client = new TranslateClient(this, App.properties.getProperty("baidu_api_key"));
@@ -89,6 +96,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
         // 这里可以设置为在线优先、离线优先、 只在线、只离线 4种模式，默认为在线优先。
         client.setPriority(TranslateClient.Priority.OFFLINE_FIRST);
     }
+
     /**
      * 解绑服务
      */
@@ -116,6 +124,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        ButterKnife.inject(this);
 
         initTransClient();// 初始化翻译相关功能
 
@@ -227,11 +236,8 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
     private void initView() {
         mInputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
 
-        mMsgListView = (ListView) findViewById(R.id.msg_listView);
         // 触摸ListView隐藏表情和输入法
         mMsgListView.setOnTouchListener(this);
-        mSendMsgBtn = (Button) findViewById(R.id.send);
-        mChatEditText = (EditText) findViewById(R.id.input);
         mChatEditText.setOnTouchListener(this);
         mChatEditText.addTextChangedListener(new TextWatcher() {
 

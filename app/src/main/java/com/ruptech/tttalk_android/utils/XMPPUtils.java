@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
 
 public class XMPPUtils {
 
+    public static final String TAG = XMPPUtils.class.getSimpleName();
+
     public static String getJabberID(String from) {
         String[] res = from.split("/");
         return res[0].toLowerCase();
@@ -64,7 +66,6 @@ public class XMPPUtils {
         String userName = res[0];
         return userName;
     }
-    public static final String TAG = XMPPUtils.class.getSimpleName();
 
     /**
      * 处理字符串中的表情
@@ -89,7 +90,7 @@ public class XMPPUtils {
             mHeadIcon.setImageBitmap(bm);
         } catch (Exception e) {
             mHeadIcon.setImageResource(R.drawable.default_portrait);
-            Log.e(TAG, e.getMessage(), e);
+            // Log.e(TAG, e.getMessage(), e);
         }
     }
 }

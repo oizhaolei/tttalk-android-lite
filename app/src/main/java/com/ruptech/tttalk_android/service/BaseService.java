@@ -124,7 +124,7 @@ public abstract class BaseService extends Service {
             ticker = title + ":\n" + messageSummary;
         } else
             ticker = author;
-        mNotification = new Notification(R.drawable.notify_newmessage, ticker,
+        mNotification = new Notification(R.mipmap.ic_launcher, ticker,
                 System.currentTimeMillis());
         Uri userNameUri = Uri.parse(fromJid);
         mNotificationIntent.setData(userNameUri);

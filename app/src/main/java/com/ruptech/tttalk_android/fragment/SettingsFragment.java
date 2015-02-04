@@ -36,6 +36,22 @@ import butterknife.OnClick;
 
 public class SettingsFragment extends Fragment implements OnClickListener,
         OnCheckedChangeListener {
+    private final TaskListener serverInfoCheckTaskListener = new TaskAdapter() {
+
+        @Override
+        public void onPostExecute(GenericTask task, TaskResult result) {
+            VersionCheckTask t = (VersionCheckTask) task;
+            ServerAppInfo serverAppInfo = t.getServerAppInfo();
+            if (serverAppInfo != null) {
+                checkVersion(serverAppInfo);
+            }
+        }
+
+        @Override
+        public void onPreExecute(GenericTask task) {
+        }
+
+    };
     @InjectView(R.id.face)
     ImageView mHeadIcon;
     @InjectView(R.id.statusIcon)
@@ -70,29 +86,16 @@ public class SettingsFragment extends Fragment implements OnClickListener,
     TextView mAboutView;
     @InjectView(R.id.exit_app)
     Button mExitBtn;
-    private final TaskListener serverInfoCheckTaskListener = new TaskAdapter() {
 
-        @Override
-        public void onPostExecute(GenericTask task, TaskResult result) {
-            VersionCheckTask t = (VersionCheckTask)task;
-            ServerAppInfo serverAppInfo = t.getServerAppInfo();
-            if (serverAppInfo != null) {
-                checkVersion(serverAppInfo);
-            }
-        }
 
-        @Override
-        public void onPreExecute(GenericTask task) {
-        }
-
-    };
     private void checkVersion(ServerAppInfo serverInfo) {
         if (serverInfo.verCode > App.getAppVersionCode()) {
             notificateUpdateVersion(serverInfo);
         } else {
-            Toast.makeText(getActivity(),getActivity().getString(R.string.update_no_new_version), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), getActivity().getString(R.string.update_no_new_version), Toast.LENGTH_SHORT).show();
         }
     }
+
     @OnClick(R.id.set_about)
     public void doVersion() {
         VersionCheckTask mVersionCheckTask = new VersionCheckTask();
@@ -100,24 +103,21 @@ public class SettingsFragment extends Fragment implements OnClickListener,
         mVersionCheckTask.execute();
 
     }
+
     private void notificateUpdateVersion(final ServerAppInfo serverInfo) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        DialogInterface.OnClickListener positiveListener =new DialogInterface.OnClickListener() {
+        DialogInterface.OnClickListener positiveListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(serverInfo.getApkUrl()));
                 startActivity(browserIntent);
             }
         };
-        builder.setTitle(getString(R.string.add_friend))
+        builder.setTitle(getString(R.string.version_upgrade))
                 .setMessage(getString(R.string.app_update) + serverInfo.verCode)
                 .setPositiveButton(R.string.ok, positiveListener)
                 .setNegativeButton(R.string.cancel, null);
         builder.create().show();
-    }
-
-    public static Fragment newInstance() {
-        return new SettingsFragment();
     }
 
     @Override

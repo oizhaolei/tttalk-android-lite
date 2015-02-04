@@ -2,7 +2,6 @@ package com.ruptech.tttalk_android.adapter;
 
 import android.app.AlertDialog;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.net.Uri;
@@ -25,7 +24,6 @@ import com.ruptech.tttalk_android.activity.ChatActivity;
 import com.ruptech.tttalk_android.db.ChatProvider;
 import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
 import com.ruptech.tttalk_android.model.Chat;
-import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.smack.FromLang;
 import com.ruptech.tttalk_android.smack.OriginId;
 import com.ruptech.tttalk_android.smack.ToLang;
@@ -92,7 +90,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
         cursor.moveToPosition(position);
 
         Chat chat = new Chat();
-        chat .setDate(cursor.getLong(cursor
+        chat.setDate(cursor.getLong(cursor
                 .getColumnIndex(ChatProvider.ChatConstants.DATE)));
 
         chat.setId(cursor.getInt(cursor
@@ -103,15 +101,15 @@ public class ChatAdapter extends SimpleCursorAdapter {
                 .getColumnIndex(ChatProvider.ChatConstants.DIRECTION)));// 消息来自
         chat.setJid(cursor.getString(cursor
                 .getColumnIndex(ChatProvider.ChatConstants.JID)));
-        chat.setPid( cursor.getString(cursor
+        chat.setPid(cursor.getString(cursor
                 .getColumnIndex(ChatConstants.PACKET_ID)));
-        chat.setRead( cursor.getInt(cursor
+        chat.setRead(cursor.getInt(cursor
                 .getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS)));
 
         boolean from_me = (chat.getFromMe() == ChatConstants.OUTGOING);
         int come = chat.getFromMe();
 
-                ViewHolder viewHolder;
+        ViewHolder viewHolder;
         if (convertView == null
                 || convertView.getTag(R.mipmap.ic_launcher + come) == null) {
             if (come == ChatConstants.OUTGOING) {
@@ -133,7 +131,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
             markAsReadDelayed(chat.getId(), DELAY_NEWMSG);
         }
 
-        bindViewData(viewHolder, from_me,  chat);
+        bindViewData(viewHolder, from_me, chat);
         return convertView;
     }
 
@@ -160,7 +158,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
         mContext.getContentResolver().update(rowuri, values, null, null);
     }
 
-    private void bindViewData(ViewHolder holder, boolean from_me,  Chat chat) {
+    private void bindViewData(ViewHolder holder, boolean from_me, Chat chat) {
         holder.avatar.setBackgroundResource(R.drawable.default_portrait);
         if (from_me
                 && !PrefUtils.getPrefBoolean(

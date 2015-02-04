@@ -7,13 +7,18 @@ import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteCursor;
+import android.database.sqlite.SQLiteCursorDriver;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteQuery;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.ruptech.tttalk_android.BuildConfig;
 
 import java.util.ArrayList;
 
@@ -36,7 +41,15 @@ public class ChatProvider extends ContentProvider {
     }
 
     private static final String TAG = "ChatProvider";
-
+    public static SQLiteDatabase.CursorFactory mCursorFactory = new SQLiteDatabase.CursorFactory() {
+        @Override
+        public Cursor newCursor(SQLiteDatabase db, SQLiteCursorDriver driver,
+                                String editTable, SQLiteQuery query) {
+            if (BuildConfig.DEBUG)
+                Log.i(TAG, query.toString());
+            return new SQLiteCursor(db, driver, editTable, query);
+        }
+    };
     private SQLiteOpenHelper mOpenHelper;
 
     public ChatProvider() {
@@ -117,7 +130,7 @@ public class ChatProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        mOpenHelper = new ChatDatabaseHelper(getContext());
+        mOpenHelper = new ChatDatabaseHelper(getContext(), mCursorFactory);
         return true;
     }
 
@@ -194,8 +207,8 @@ public class ChatProvider extends ContentProvider {
         private static final String DATABASE_NAME = "chat.db";
         private static final int DATABASE_VERSION = 6;
 
-        public ChatDatabaseHelper(Context context) {
-            super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        public ChatDatabaseHelper(Context context, SQLiteDatabase.CursorFactory cf) {
+            super(context, DATABASE_NAME, cf, DATABASE_VERSION);
         }
 
         @Override
@@ -250,7 +263,7 @@ public class ChatProvider extends ContentProvider {
         // acknowledged
 
         public static ArrayList<String> getRequiredColumns() {
-            ArrayList<String> tmpList = new ArrayList< >();
+            ArrayList<String> tmpList = new ArrayList<>();
             tmpList.add(DATE);
             tmpList.add(DIRECTION);
             tmpList.add(JID);

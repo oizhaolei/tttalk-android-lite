@@ -15,7 +15,7 @@ import java.util.ArrayList;
 public class XXBroadcastReceiver extends BroadcastReceiver {
     public static final String BOOT_COMPLETED_ACTION = "com.ruptech.tttalk_android.action.BOOT_COMPLETED";
     private static final String TAG = XXBroadcastReceiver.class.getName();
-    public static ArrayList<EventHandler> mListeners = new ArrayList< >();
+    public static ArrayList<EventHandler> mListeners = new ArrayList<>();
 
     @Override
     public void onReceive(Context context, Intent intent) {

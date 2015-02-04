@@ -17,7 +17,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.ruptech.tttalk_android.App;
-import com.ruptech.tttalk_android.BuildConfig;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.model.User;
 import com.ruptech.tttalk_android.service.IConnectionStatusCallback;

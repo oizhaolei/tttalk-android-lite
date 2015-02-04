@@ -6,12 +6,13 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.util.Log;
 
-import com.ruptech.tttalk_android.activity.MainActivity;
+import com.ruptech.tttalk_android.bus.LogoutEvent;
 import com.ruptech.tttalk_android.http.HttpServer;
 import com.ruptech.tttalk_android.model.User;
 import com.ruptech.tttalk_android.smack.Smack;
 import com.ruptech.tttalk_android.utils.AssetsPropertyReader;
 import com.ruptech.tttalk_android.utils.PrefUtils;
+import com.squareup.otto.Bus;
 
 import java.util.Properties;
 
@@ -26,6 +27,7 @@ public class App extends Application implements
     public static Context mContext;
     public static NotificationManager notificationManager;
     public static Smack mSmack;
+    public static Bus mBus;
     private static HttpServer httpServer;
     private static User user;
 
@@ -65,7 +67,8 @@ public class App extends Application implements
     public static void logout() {
 
         Log.v(TAG, "logout.");
-        MainActivity.close();
+        mBus.post(new LogoutEvent());
+
         App.saveUser(null);
     }
 
@@ -88,6 +91,7 @@ public class App extends Application implements
         if (BuildConfig.DEBUG)
             Log.e(TAG, "App.onCreate");
         Thread.setDefaultUncaughtExceptionHandler(this);
+        mBus = new Bus();
 
         mContext = this.getApplicationContext();
         notificationManager = (NotificationManager) this

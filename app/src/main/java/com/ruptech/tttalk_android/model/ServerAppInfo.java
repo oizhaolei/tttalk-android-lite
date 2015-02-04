@@ -12,7 +12,7 @@ public class ServerAppInfo implements Serializable {
     public int verCode = 0;
     public int fileSize = 0;
     public String verName = "";
-
+    public String appServerUrl;
 
     public static ServerAppInfo parse(JSONObject verInfo) throws JSONException {
         ServerAppInfo info = new ServerAppInfo();
@@ -29,9 +29,6 @@ public class ServerAppInfo implements Serializable {
 
         return info;
     }
-
-
-    public String appServerUrl;
 
     public String getAppServerUrl() {
         return appServerUrl;

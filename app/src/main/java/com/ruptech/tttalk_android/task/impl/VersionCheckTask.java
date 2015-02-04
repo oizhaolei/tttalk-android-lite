@@ -8,11 +8,11 @@ import com.ruptech.tttalk_android.task.TaskResult;
 
 public class VersionCheckTask extends GenericTask {
 
+    private ServerAppInfo serverAppInfo;
+
     public ServerAppInfo getServerAppInfo() {
         return serverAppInfo;
     }
-
-    private ServerAppInfo serverAppInfo;
 
     @Override
     protected TaskResult _doInBackground() throws Exception {

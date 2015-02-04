@@ -389,6 +389,15 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
             }
 
         });
+    }
+
+    private void connectionScuessed() {
+        mConnectedState = CONNECTED;// 已经连接上
+        mReconnectTimeout = RECONNECT_AFTER;// 重置重连的时间
+
+        if (mConnectionStatusCallback != null)
+            mConnectionStatusCallback.connectionStatusChanged(mConnectedState,
+                    "");
     }    Runnable monitorStatus = new Runnable() {
         public void run() {
             try {
@@ -409,15 +418,6 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
             }
         }
     };
-
-    private void connectionScuessed() {
-        mConnectedState = CONNECTED;// 已经连接上
-        mReconnectTimeout = RECONNECT_AFTER;// 重置重连的时间
-
-        if (mConnectionStatusCallback != null)
-            mConnectionStatusCallback.connectionStatusChanged(mConnectedState,
-                    "");
-    }
 
     // 连接中，通知界面线程做一些处理
     private void postConnecting() {
@@ -474,7 +474,7 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
         if (!PrefUtils.getPrefBoolean(
                 PrefUtils.FOREGROUND, true))
             return;
-        String title  = App.readUser().getAccount();
+        String title = App.readUser().getAccount();
 
         Notification n = new Notification(R.drawable.default_portrait,
                 title, System.currentTimeMillis());

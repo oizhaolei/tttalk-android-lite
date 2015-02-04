@@ -156,7 +156,6 @@ public abstract class HttpConnection {
     }
 
 
-
     class Response {
         private final String TAG = Response.class.getSimpleName();
 

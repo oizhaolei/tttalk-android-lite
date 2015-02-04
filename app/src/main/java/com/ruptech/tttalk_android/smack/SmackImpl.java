@@ -807,8 +807,11 @@ public class SmackImpl implements Smack {
         final Message newMessage = new Message(toJID, Message.Type.chat);
         newMessage.setBody(message);
         newMessage.addExtension(new DeliveryReceiptRequest());
-        for (PacketExtension extension : extensions) {
-            newMessage.addExtension(extension);
+        if (extensions != null) {
+            //TODO: merge tttalk extensions
+            for (PacketExtension extension : extensions) {
+                newMessage.addExtension(extension);
+            }
         }
 
         if (isAuthenticated()) {
