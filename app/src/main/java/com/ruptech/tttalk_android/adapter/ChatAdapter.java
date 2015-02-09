@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.baidu.baidutranslate.openapi.TranslateClient;
 import com.baidu.baidutranslate.openapi.callback.ITransResultCallback;
 import com.baidu.baidutranslate.openapi.entity.TransResult;
+import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.activity.ChatActivity;
 import com.ruptech.tttalk_android.db.ChatProvider;
@@ -26,6 +27,7 @@ import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
 import com.ruptech.tttalk_android.model.Chat;
 import com.ruptech.tttalk_android.smack.FromLang;
 import com.ruptech.tttalk_android.smack.OriginId;
+import com.ruptech.tttalk_android.smack.TTTalkExtension;
 import com.ruptech.tttalk_android.smack.ToLang;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.utils.TimeUtil;
@@ -35,6 +37,8 @@ import org.jivesoftware.smack.packet.PacketExtension;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -206,9 +210,23 @@ public class ChatAdapter extends SimpleCursorAdapter {
 
     private void requestTTTalkTranslate(Chat chat, String fromLang, String toLang) {
         Collection<PacketExtension> extensions = new ArrayList<>();
-        extensions.add(new FromLang(fromLang));
-        extensions.add(new ToLang(toLang));
-        extensions.add(new OriginId(chat.getPid()));
+
+        fromLang = "CN";
+        toLang = "KR";
+
+        String callback_id = chat.getPid();
+        Map<String, String> map = new HashMap <String, String>();
+//        map.put("key", "1111111");
+//        map.put("secret", "2222222");
+//        map.put("test", "true");
+//        map.put("ver", "97");
+        map.put("fromlang", fromLang);
+        map.put("tolang", toLang);
+        map.put("original_id", callback_id);
+
+        TTTalkExtension tttalk = new TTTalkExtension(map);
+        Log.i("test", tttalk.toXML());
+        extensions.add(tttalk);
 
         mContext.getService().sendMessage("tttalk.translator@tttalk.org", chat.getMessage(), extensions);
     }
