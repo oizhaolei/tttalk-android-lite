@@ -17,7 +17,7 @@
 
                 <stroke
                     android:width="3.0dip"
-                    android:color="@color/color_hei_8" />
+                    android:color="@color/color_black_8" />
             </shape>
         </clip>
     </item>

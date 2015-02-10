@@ -19,6 +19,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.ruptech.tttalk_android.BuildConfig;
+import com.ruptech.tttalk_android.model.Chat;
 
 import java.util.ArrayList;
 
@@ -202,10 +203,32 @@ public class ChatProvider extends ContentProvider {
 
     }
 
+    public static Chat parseChat(Cursor cursor) {
+        Chat chat = new Chat();
+        chat.setDate(cursor.getLong(cursor
+                .getColumnIndex(ChatProvider.ChatConstants.DATE)));
+
+        chat.setId(cursor.getInt(cursor
+                .getColumnIndex(ChatProvider.ChatConstants._ID)));
+        chat.setMessage(cursor.getString(cursor
+                .getColumnIndex(ChatProvider.ChatConstants.MESSAGE)));
+        chat.setTo_content(cursor.getString(cursor
+                .getColumnIndex(ChatConstants.TO_MESSAGE)));
+        chat.setFromMe(cursor.getInt(cursor
+                .getColumnIndex(ChatProvider.ChatConstants.DIRECTION)));// 消息来自
+        chat.setJid(cursor.getString(cursor
+                .getColumnIndex(ChatProvider.ChatConstants.JID)));
+        chat.setPid(cursor.getString(cursor
+                .getColumnIndex(ChatConstants.PACKET_ID)));
+        chat.setRead(cursor.getInt(cursor
+                .getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS)));
+        return chat;
+    }
+
     private static class ChatDatabaseHelper extends SQLiteOpenHelper {
 
         private static final String DATABASE_NAME = "chat.db";
-        private static final int DATABASE_VERSION = 6;
+        private static final int DATABASE_VERSION = 7;
 
         public ChatDatabaseHelper(Context context, SQLiteDatabase.CursorFactory cf) {
             super(context, DATABASE_NAME, cf, DATABASE_VERSION);
@@ -219,13 +242,16 @@ public class ChatProvider extends ContentProvider {
                     + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                     + ChatConstants.DATE + " INTEGER,"
                     + ChatConstants.DIRECTION + " INTEGER," + ChatConstants.JID
-                    + " TEXT," + ChatConstants.MESSAGE + " TEXT,"
+                    + " TEXT," + ChatConstants.MESSAGE + " TEXT," + ChatConstants.TO_MESSAGE + " TEXT,"
                     + ChatConstants.DELIVERY_STATUS + " INTEGER,"
                     + ChatConstants.PACKET_ID + " TEXT);");
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            if (oldVersion ==6) {
+                db.execSQL("ALTER TABLE "+ TABLE_NAME +" ADD "+ ChatConstants.TO_MESSAGE + " TEXT;");
+            }
 
         }
 
@@ -237,10 +263,10 @@ public class ChatProvider extends ContentProvider {
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.yaxim.chat";
         public static final String DEFAULT_SORT_ORDER = "_id ASC"; // sort by
         public static final String DATE = "date";
-        // auto-id
         public static final String DIRECTION = "from_me";
         public static final String JID = "jid";
         public static final String MESSAGE = "message";
+        public static final String TO_MESSAGE = "to_content";
         public static final String DELIVERY_STATUS = "read"; // SQLite can not
         // rename
         // columns,

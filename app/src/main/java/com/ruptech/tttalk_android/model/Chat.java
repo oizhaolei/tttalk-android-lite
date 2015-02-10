@@ -10,6 +10,16 @@ public class Chat implements Serializable {
     protected int read;
     protected String jid;
     protected String message;
+
+    public String getTo_content() {
+        return to_content;
+    }
+
+    public void setTo_content(String to_content) {
+        this.to_content = to_content;
+    }
+
+    protected String to_content;
     protected String pid;
 
     public int getId() {

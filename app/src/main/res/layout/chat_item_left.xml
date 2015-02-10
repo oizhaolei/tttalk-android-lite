@@ -34,7 +34,7 @@
         android:scaleType="fitXY"
         android:src="@drawable/chat_item_icon_bg_selector" />
 
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/content_view"
 
         android:layout_width="wrap_content"
@@ -52,7 +52,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:textColor="@color/color_hei"
+            android:textColor="@color/color_black"
             android:textSize="16.0sp" />
-    </RelativeLayout>
+
+        <TextView
+            android:id="@+id/to_content_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:visibility="gone"
+            android:textColor="@color/color_yello"
+            android:textSize="16.0sp" />
+    </LinearLayout>
 </RelativeLayout>

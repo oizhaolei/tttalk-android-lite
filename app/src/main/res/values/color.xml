@@ -10,15 +10,16 @@
 
     <color name="sidebar_item_background_activated_dark">#ff4c365d</color>
     <color name="text_white">#ffffffff</color>
-    <color name="color_hei">#ff000000</color>
-    <color name="color_hei_8">#00000000</color>
-    <color name="color_bai">#ffffffff</color>
-    <color name="color_bai_8">#ffffffff</color>
+    <color name="color_black">#ff000000</color>
+    <color name="color_yello">#ffe66300</color>
+    <color name="color_black_8">#00000000</color>
+    <color name="color_white">#ffffffff</color>
+    <color name="color_white_8">#ffffffff</color>
     <color name="window_bg">#00eef1f3</color>
-    <color name="transparent">@color/color_hei_8</color>
-    <color name="chat_time">@color/color_bai</color>
+    <color name="transparent">@color/color_black_8</color>
+    <color name="chat_time">@color/color_white</color>
     <color name="white">#ffffffff</color>
-    <color name="black">@color/color_hei</color>
+    <color name="black">@color/color_black</color>
     <color name="thirty_transparent_black">#4d000000</color>
     <color name="sc_gray">#ff777777</color>
     <color name="tag_textview2">#ff4a7928</color>
@@ -35,7 +36,7 @@
     <color name="qzone_feeditem_sel">#fff1f1f1</color>
     <color name="qzone_feeditem_nor">#fffafafa</color>
 
-    <drawable name="trans">@color/color_hei_8</drawable>
+    <drawable name="trans">@color/color_black_8</drawable>
 
     <item name="preview_btn_bg_press" type="drawable">#ff000000</item>
 </resources>

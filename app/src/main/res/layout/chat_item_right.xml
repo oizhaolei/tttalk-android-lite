@@ -48,7 +48,7 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:focusable="true"
-                android:textColor="@color/color_hei"
+                android:textColor="@color/color_black"
                 android:textSize="16.0sp" />
         </RelativeLayout>
 

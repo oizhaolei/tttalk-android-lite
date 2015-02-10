@@ -93,22 +93,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
         Cursor cursor = this.getCursor();
         cursor.moveToPosition(position);
 
-        Chat chat = new Chat();
-        chat.setDate(cursor.getLong(cursor
-                .getColumnIndex(ChatProvider.ChatConstants.DATE)));
-
-        chat.setId(cursor.getInt(cursor
-                .getColumnIndex(ChatProvider.ChatConstants._ID)));
-        chat.setMessage(cursor.getString(cursor
-                .getColumnIndex(ChatProvider.ChatConstants.MESSAGE)));
-        chat.setFromMe(cursor.getInt(cursor
-                .getColumnIndex(ChatProvider.ChatConstants.DIRECTION)));// 消息来自
-        chat.setJid(cursor.getString(cursor
-                .getColumnIndex(ChatProvider.ChatConstants.JID)));
-        chat.setPid(cursor.getString(cursor
-                .getColumnIndex(ChatConstants.PACKET_ID)));
-        chat.setRead(cursor.getInt(cursor
-                .getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS)));
+        Chat chat = ChatProvider.parseChat(cursor);
 
         boolean from_me = (chat.getFromMe() == ChatConstants.OUTGOING);
         int come = chat.getFromMe();
@@ -135,7 +120,19 @@ public class ChatAdapter extends SimpleCursorAdapter {
             markAsReadDelayed(chat.getId(), DELAY_NEWMSG);
         }
 
-        bindViewData(viewHolder, from_me, chat);
+        viewHolder.avatar.setBackgroundResource(R.drawable.default_portrait);
+        if (from_me
+                && !PrefUtils.getPrefBoolean(
+                PrefUtils.SHOW_MY_HEAD, true)) {
+            viewHolder.avatar.setVisibility(View.GONE);
+        }
+        CharSequence text = XMPPUtils.convertNormalStringToSpannableString(
+                mContext, chat.getMessage(), false);
+        viewHolder.content.setText(text);
+        viewHolder.contentLayout.setTag(chat);
+
+        String date = TimeUtil.getChatTime(chat.getDate());
+        viewHolder.time.setText(date);
         return convertView;
     }
 
@@ -162,21 +159,6 @@ public class ChatAdapter extends SimpleCursorAdapter {
         mContext.getContentResolver().update(rowuri, values, null, null);
     }
 
-    private void bindViewData(ViewHolder holder, boolean from_me, Chat chat) {
-        holder.avatar.setBackgroundResource(R.drawable.default_portrait);
-        if (from_me
-                && !PrefUtils.getPrefBoolean(
-                PrefUtils.SHOW_MY_HEAD, true)) {
-            holder.avatar.setVisibility(View.GONE);
-        }
-        CharSequence text = XMPPUtils.convertNormalStringToSpannableString(
-                mContext, chat.getMessage(), false);
-        holder.content.setText(text);
-        holder.contentLayout.setTag(chat);
-
-        String date = TimeUtil.getChatTime(chat.getDate());
-        holder.time.setText(date);
-    }
 
     private ViewHolder buildHolder(View convertView) {
         final ViewHolder holder = new ViewHolder(convertView);
@@ -236,6 +218,8 @@ public class ChatAdapter extends SimpleCursorAdapter {
         View contentLayout;
         @InjectView(R.id.content_textView)
         TextView content;
+        @InjectView(R.id.to_content_textView)
+        TextView toContent;
         @InjectView(R.id.datetime)
         TextView time;
         @InjectView(R.id.icon)

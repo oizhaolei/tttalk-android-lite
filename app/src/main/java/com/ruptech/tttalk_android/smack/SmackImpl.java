@@ -101,6 +101,7 @@ public class SmackImpl implements Smack {
         ProviderManager.getInstance().addExtensionProvider(ToLang.ELEMENT_NAME, ToLang.NAMESPACE, new ToLang.Provider());
         ProviderManager.getInstance().addExtensionProvider(Cost.ELEMENT_NAME, Cost.NAMESPACE, new Cost.Provider());
         ProviderManager.getInstance().addExtensionProvider(OriginId.ELEMENT_NAME, OriginId.NAMESPACE, new OriginId.Provider());
+        ProviderManager.getInstance().addExtensionProvider(TTTalkExtension.ELEMENT_NAME, TTTalkExtension.NAMESPACE, new TTTalkExtension.Provider());
 
         this.mXMPPConfig = new ConnectionConfiguration(server, port);
 
