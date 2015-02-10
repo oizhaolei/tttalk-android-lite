@@ -27,7 +27,7 @@ public class HttpServer extends HttpConnection {
     }
 
     private String _url(String s) {
-        return String.format("%s%s", App.properties.getProperty("server.url"), s);
+        return String.format("%s%s", App.properties.getProperty("xmpp.server.url"), s);
     }
 
 }

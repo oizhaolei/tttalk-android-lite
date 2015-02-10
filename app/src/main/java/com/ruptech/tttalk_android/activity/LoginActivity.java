@@ -18,10 +18,11 @@ import android.widget.TextView;
 
 import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
+import com.ruptech.tttalk_android.bus.ConnectionStatusChangedEvent;
 import com.ruptech.tttalk_android.model.User;
-import com.ruptech.tttalk_android.service.IConnectionStatusCallback;
 import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.PrefUtils;
+import com.squareup.otto.Subscribe;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -29,10 +30,9 @@ import butterknife.OnClick;
 
 
 /**
- * A login screen that offers login via username/password.
+ * A login screen that offers login via username/passord.
  */
-public class LoginActivity extends ActionBarActivity implements
-        IConnectionStatusCallback {
+public class LoginActivity extends ActionBarActivity  {
     public static final String LOGIN_ACTION = "com.ruptech.tttalk_android.action.LOGIN";
     private static final String TAG = LoginActivity.class.getName();
     // UI references.
@@ -50,13 +50,11 @@ public class LoginActivity extends ActionBarActivity implements
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mService = ((TTTalkService.XXBinder) service).getService();
-            mService.registerConnectionStatusCallback(LoginActivity.this);
             // 开始连接xmpp服务器
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mService.unRegisterConnectionStatusCallback();
             mService = null;
         }
 
@@ -70,8 +68,9 @@ public class LoginActivity extends ActionBarActivity implements
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        App.mBus.unregister(this);
         unbindXMPPService();
+        super.onDestroy();
     }
 
     @Override
@@ -79,10 +78,10 @@ public class LoginActivity extends ActionBarActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.inject(this);
+        App.mBus.register(this);
+
         startService(new Intent(LoginActivity.this, TTTalkService.class));
         bindXMPPService();
-
-        Log.v(TAG, App.properties.getProperty("server.url"));
 
         if (App.readUser() != null) {
             gotoMainActivity();
@@ -205,8 +204,11 @@ public class LoginActivity extends ActionBarActivity implements
         return password.length() > 1;
     }
 
-    @Override
-    public void connectionStatusChanged(int connectedState, String reason) {
+    @Subscribe
+    public void answerConnectionStatusChanged(ConnectionStatusChangedEvent event) {
+        int connectedState=event.connectedState;
+        String reason=event.reason;
+
         if (progressDialog != null && progressDialog.isShowing())
             progressDialog.dismiss();
         if (connectedState == TTTalkService.CONNECTED && mService.isAuthenticated()) {

@@ -132,7 +132,7 @@ public abstract class HttpConnection {
         }
         String url = ifPage;
         if (!url.startsWith("http")) {
-            url = App.properties.getProperty("server.url") + url;
+            url = App.properties.getProperty("xmpp.server.url") + url;
         }
         url += "?" + encodeParameters(params);
         return url;

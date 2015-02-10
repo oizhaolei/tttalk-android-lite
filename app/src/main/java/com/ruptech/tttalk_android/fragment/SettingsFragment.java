@@ -8,12 +8,8 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,8 +30,7 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnClick;
 
-public class SettingsFragment extends Fragment implements OnClickListener,
-        OnCheckedChangeListener {
+public class SettingsFragment extends Fragment {
     private final TaskListener serverInfoCheckTaskListener = new TaskAdapter() {
 
         @Override
@@ -80,12 +75,8 @@ public class SettingsFragment extends Fragment implements OnClickListener,
     CheckBox mPoweronReceiverMsgCheckBox;
     @InjectView(R.id.send_crash_switch)
     CheckBox mSendCrashCheckBox;
-    @InjectView(R.id.set_feedback)
-    View mFeedBackView;
     @InjectView(R.id.set_about_textview)
     TextView mAboutView;
-    @InjectView(R.id.exit_app)
-    Button mExitBtn;
 
 
     private void checkVersion(ServerAppInfo serverInfo) {
@@ -180,14 +171,9 @@ public class SettingsFragment extends Fragment implements OnClickListener,
         mAboutView.setText("" + App.getAppVersionCode());
     }
 
-    @Override
-    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-    }
 
-    @Override
-    public void onClick(View v) {
-    }
-
+    @OnClick(R.id.exit_app)
     public void logoutDialog() {
+        App.logout();
     }
 }

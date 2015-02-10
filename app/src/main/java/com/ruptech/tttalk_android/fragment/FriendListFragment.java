@@ -32,10 +32,6 @@ public class FriendListFragment extends ListFragment {
         super();
     }
 
-    public static Fragment newInstance() {
-        return new FriendListFragment();
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

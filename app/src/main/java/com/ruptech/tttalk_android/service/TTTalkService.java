@@ -21,9 +21,10 @@ import android.widget.Toast;
 import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.XXBroadcastReceiver;
-import com.ruptech.tttalk_android.XXBroadcastReceiver.EventHandler;
 import com.ruptech.tttalk_android.activity.LoginActivity;
 import com.ruptech.tttalk_android.activity.MainActivity;
+import com.ruptech.tttalk_android.bus.ConnectionStatusChangedEvent;
+import com.ruptech.tttalk_android.bus.NetChangeEvent;
 import com.ruptech.tttalk_android.db.RosterProvider;
 import com.ruptech.tttalk_android.exception.XMPPException;
 import com.ruptech.tttalk_android.smack.Smack;
@@ -31,6 +32,7 @@ import com.ruptech.tttalk_android.smack.SmackImpl;
 import com.ruptech.tttalk_android.smack.SmackListener;
 import com.ruptech.tttalk_android.utils.NetUtil;
 import com.ruptech.tttalk_android.utils.PrefUtils;
+import com.squareup.otto.Subscribe;
 
 import org.jivesoftware.smack.packet.PacketExtension;
 
@@ -39,12 +41,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-public class TTTalkService extends BaseService implements SmackListener, EventHandler {
+public class TTTalkService extends BaseService implements SmackListener {
     public static final int CONNECTED = 0;
     public static final int DISCONNECTED = -1;
+    public static final int CONNECTING = 1;
     // private boolean mIsNeedReConnection = false; // 是否需要重连
     private int mConnectedState = DISCONNECTED; // 是否已经连接
-    public static final int CONNECTING = 1;
     public static final String PONG_TIMEOUT = "pong timeout";// 连接超时
     public static final String NETWORK_ERROR = "network error";// 网络错误
     public static final String LOGOUT = "logout";// 手动退出
@@ -64,7 +66,6 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
     private static final String[] GROUPS_QUERY = new String[]{
             RosterProvider.RosterConstants._ID, RosterProvider.RosterConstants.GROUP,};
     private IBinder mBinder = new XXBinder();
-    private IConnectionStatusCallback mConnectionStatusCallback;
     private Thread mConnectingThread;
     private Handler mMainHandler = new Handler();
     private boolean mIsFirstLoginAction;
@@ -78,19 +79,6 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
     private PendingIntent mPongTimeoutAlarmPendIntent;
     private PongTimeoutAlarmReceiver mPongTimeoutAlarmReceiver = new PongTimeoutAlarmReceiver();
     private BroadcastReceiver mPingAlarmReceiver = new PingAlarmReceiver();
-
-    /**
-     * 注册注解面和聊天界面时连接状态变化回调
-     *
-     * @param cb
-     */
-    public void registerConnectionStatusCallback(IConnectionStatusCallback cb) {
-        mConnectionStatusCallback = cb;
-    }
-
-    public void unRegisterConnectionStatusCallback() {
-        mConnectionStatusCallback = null;
-    }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -132,7 +120,7 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
     @Override
     public void onCreate() {
         super.onCreate();
-        XXBroadcastReceiver.mListeners.add(this);
+        App.mBus.register(this);
         //BaseActivity.mListeners.add(this);
         mActivityManager = ((ActivityManager) getSystemService(Context.ACTIVITY_SERVICE));
         mPackageName = getPackageName();
@@ -160,7 +148,7 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
     @Override
     public void onDestroy() {
         super.onDestroy();
-        XXBroadcastReceiver.mListeners.remove(this);
+        App.mBus.unregister(this);
         //BaseActivity.mListeners.remove(this);
         ((AlarmManager) getSystemService(Context.ALARM_SERVICE))
                 .cancel(mPAlarmIntent);// 取消重连闹钟
@@ -343,12 +331,14 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
             return;
         }
         // 回调
-        if (mConnectionStatusCallback != null) {
-            mConnectionStatusCallback.connectionStatusChanged(mConnectedState,
-                    reason);
-            if (mIsFirstLoginAction)// 如果是第一次登录,就算登录失败也不需要继续
-                return;
-        }
+        App.mBus.post(new ConnectionStatusChangedEvent(mConnectedState, reason));
+        if (mIsFirstLoginAction)// 如果是第一次登录,就算登录失败也不需要继续
+            return;
+
+//        if (mConnectionStatusCallback != null) {
+//            mConnectionStatusCallback.answerConnectionStatusChanged(mConnectedState,
+//                    reason);
+//        }
 
         // 无网络连接时,直接返回
         if (NetUtil.getNetworkState(this) == NetUtil.NETWORN_NONE) {
@@ -395,9 +385,10 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
         mConnectedState = CONNECTED;// 已经连接上
         mReconnectTimeout = RECONNECT_AFTER;// 重置重连的时间
 
-        if (mConnectionStatusCallback != null)
-            mConnectionStatusCallback.connectionStatusChanged(mConnectedState,
-                    "");
+        App.mBus.post(new ConnectionStatusChangedEvent(mConnectedState, ""));
+//        if (mConnectionStatusCallback != null)
+//            mConnectionStatusCallback.answerConnectionStatusChanged(mConnectedState,
+//                    "");
     }    Runnable monitorStatus = new Runnable() {
         public void run() {
             try {
@@ -432,9 +423,11 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
     private void connecting() {
         // TODO Auto-generated method stub
         mConnectedState = CONNECTING;// 连接中
-        if (mConnectionStatusCallback != null)
-            mConnectionStatusCallback.connectionStatusChanged(mConnectedState,
-                    "");
+        String reason="";
+        App.mBus.post(new ConnectionStatusChangedEvent(mConnectedState, reason));
+//        if (mConnectionStatusCallback != null)
+//            mConnectionStatusCallback.answerConnectionStatusChanged(mConnectedState,
+//                    "");
     }
 
     // 收到新消息
@@ -513,8 +506,8 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
         return false;
     }
 
-    @Override
-    public void onNetChange() {
+    @Subscribe
+    public void answerNetChange(NetChangeEvent event) {
         if (NetUtil.getNetworkState(this) == NetUtil.NETWORN_NONE) {// 如果是网络断开，不作处理
             connectionFailed(NETWORK_ERROR);
             return;
@@ -579,7 +572,7 @@ public class TTTalkService extends BaseService implements SmackListener, EventHa
 
     private Smack createSmack() {
         if (App.mSmack == null)
-            App.mSmack = new SmackImpl(App.readUser(), TTTalkService.this, TTTalkService.this, getContentResolver());
+            App.mSmack = new SmackImpl(TTTalkService.this, TTTalkService.this, getContentResolver());
         return App.mSmack;
     }
 

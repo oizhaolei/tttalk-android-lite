@@ -7,25 +7,21 @@ import android.net.ConnectivityManager;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.ruptech.tttalk_android.bus.NetChangeEvent;
 import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.PrefUtils;
-
-import java.util.ArrayList;
 
 public class XXBroadcastReceiver extends BroadcastReceiver {
     public static final String BOOT_COMPLETED_ACTION = "com.ruptech.tttalk_android.action.BOOT_COMPLETED";
     private static final String TAG = XXBroadcastReceiver.class.getName();
-    public static ArrayList<EventHandler> mListeners = new ArrayList<>();
 
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         Log.i(TAG, "action = " + action);
         if (TextUtils.equals(action, ConnectivityManager.CONNECTIVITY_ACTION)) {
-            if (mListeners.size() > 0)// 通知接口完成加载
-                for (EventHandler handler : mListeners) {
-                    handler.onNetChange();
-                }
+            boolean connectivity = intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false);
+            App.mBus.post(new NetChangeEvent(connectivity));
         } else if (intent.getAction().equals(Intent.ACTION_SHUTDOWN)) {
             Log.d(TAG, "System shutdown, stopping service.");
             Intent xmppServiceIntent = new Intent(context, TTTalkService.class);
@@ -38,10 +34,5 @@ public class XXBroadcastReceiver extends BroadcastReceiver {
                 context.startService(i);
             }
         }
-    }
-
-    public static abstract interface EventHandler {
-
-        public abstract void onNetChange();
     }
 }

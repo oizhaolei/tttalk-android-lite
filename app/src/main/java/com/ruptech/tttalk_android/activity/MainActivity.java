@@ -24,10 +24,11 @@ import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.XXBroadcastReceiver;
 import com.ruptech.tttalk_android.adapter.SlidingMenuAdapter;
+import com.ruptech.tttalk_android.bus.ConnectionStatusChangedEvent;
 import com.ruptech.tttalk_android.bus.LogoutEvent;
+import com.ruptech.tttalk_android.bus.NetChangeEvent;
 import com.ruptech.tttalk_android.fragment.MainFragment;
 import com.ruptech.tttalk_android.fragment.SettingsFragment;
-import com.ruptech.tttalk_android.service.IConnectionStatusCallback;
 import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.utils.XMPPUtils;
@@ -39,8 +40,7 @@ import java.util.HashMap;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
-public class MainActivity extends ActionBarActivity implements
-        IConnectionStatusCallback, XXBroadcastReceiver.EventHandler, ListView.OnItemClickListener {
+public class MainActivity extends ActionBarActivity implements ListView.OnItemClickListener {
     public static final String TAG = MainActivity.class.getSimpleName();
     public static HashMap<String, Integer> mStatusMap;
     static {
@@ -63,7 +63,6 @@ public class MainActivity extends ActionBarActivity implements
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mService = ((TTTalkService.XXBinder) service).getService();
-            mService.registerConnectionStatusCallback(MainActivity.this);
             // 开始连接xmpp服务器
             if (!mService.isAuthenticated()) {
                 String account = App.readUser().getAccount();
@@ -81,7 +80,6 @@ public class MainActivity extends ActionBarActivity implements
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mService.unRegisterConnectionStatusCallback();
             mService = null;
         }
 
@@ -94,13 +92,15 @@ public class MainActivity extends ActionBarActivity implements
         selectItem(position);
     }
 
-    @Override
-    public void onNetChange() {
+    @Subscribe
+    public void answerNetChange(NetChangeEvent event) {
         getSupportActionBar().setTitle(R.string.net_error_tip);
     }
 
-    @Override
-    public void connectionStatusChanged(int connectedState, String reason) {
+    @Subscribe
+    public void answerConnectionStatusChanged(ConnectionStatusChangedEvent event) {
+        int connectedState=event.connectedState;
+        String reason=event.reason;
         switch (connectedState) {
             case TTTalkService.CONNECTED:
                 getSupportActionBar().setTitle(XMPPUtils.splitJidAndServer(App.readUser().getAccount()));
@@ -137,20 +137,19 @@ public class MainActivity extends ActionBarActivity implements
     @Subscribe
     public void answerLogout(LogoutEvent event) {
         finish();
+        App.saveUser(null);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         bindXMPPService();
-        XXBroadcastReceiver.mListeners.add(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         unbindXMPPService();
-        XXBroadcastReceiver.mListeners.remove(this);
     }
 
     private void bindXMPPService() {

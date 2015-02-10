@@ -30,19 +30,20 @@ import com.baidu.baidutranslate.openapi.TranslateClient;
 import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.adapter.ChatAdapter;
+import com.ruptech.tttalk_android.bus.ConnectionStatusChangedEvent;
 import com.ruptech.tttalk_android.db.ChatProvider;
 import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
 import com.ruptech.tttalk_android.db.RosterProvider;
-import com.ruptech.tttalk_android.service.IConnectionStatusCallback;
 import com.ruptech.tttalk_android.service.TTTalkService;
 import com.ruptech.tttalk_android.utils.StatusMode;
 import com.ruptech.tttalk_android.utils.XMPPUtils;
+import com.squareup.otto.Subscribe;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
 public class ChatActivity extends ActionBarActivity implements OnTouchListener,
-        OnClickListener, IConnectionStatusCallback {
+        OnClickListener {
     public static final String INTENT_EXTRA_USERNAME = ChatActivity.class
             .getName() + ".username";// 昵称对应的key
     private static final String TAG = ChatActivity.class.getName();
@@ -71,7 +72,6 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mService = ((TTTalkService.XXBinder) service).getService();
-            mService.registerConnectionStatusCallback(ChatActivity.this);
             // 如果没有连接上，则重新连接xmpp服务器
             if (!mService.isAuthenticated()) {
                 String usr = App.readUser().getAccount();
@@ -82,7 +82,6 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mService.unRegisterConnectionStatusCallback();
             mService = null;
         }
 
@@ -125,6 +124,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         ButterKnife.inject(this);
+        App.mBus.register(this);
 
         initTransClient();// 初始化翻译相关功能
 
@@ -177,7 +177,6 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         if (hasWindowFocus())
             unbindXMPPService();// 解绑服务
         getContentResolver().unregisterContentObserver(mContactObserver);
@@ -185,6 +184,8 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
         if (client != null) {
             client.onDestroy();
         }
+        App.mBus.unregister(this);
+        super.onDestroy();
     }
 
     @Override
@@ -319,9 +320,11 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
             }
         };
     }
+    @Subscribe
+    public void answerConnectionStatusChanged(ConnectionStatusChangedEvent event) {
+        int connectedState=event.connectedState;
+        String reason=event.reason;
 
-    @Override
-    public void connectionStatusChanged(int connectedState, String reason) {
         switch (connectedState) {
             case TTTalkService.CONNECTED:
                 getSupportActionBar().setTitle(XMPPUtils.splitJidAndServer(App.readUser().getAccount()));
@@ -334,7 +337,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
                 break;
 
             default:
-                getSupportActionBar().setTitle("?");
+                getSupportActionBar().setTitle(reason);
                 break;
         }
     }

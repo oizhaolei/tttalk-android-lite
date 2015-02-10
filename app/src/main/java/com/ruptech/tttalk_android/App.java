@@ -68,8 +68,6 @@ public class App extends Application implements
 
         Log.v(TAG, "logout.");
         mBus.post(new LogoutEvent());
-
-        App.saveUser(null);
     }
 
     @Override

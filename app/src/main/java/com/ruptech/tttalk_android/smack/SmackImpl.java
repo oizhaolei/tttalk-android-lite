@@ -13,7 +13,6 @@ import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
 import com.ruptech.tttalk_android.db.RosterProvider;
 import com.ruptech.tttalk_android.db.RosterProvider.RosterConstants;
 import com.ruptech.tttalk_android.exception.XMPPException;
-import com.ruptech.tttalk_android.model.User;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.utils.StatusMode;
 import com.ruptech.tttalk_android.utils.XMPPUtils;
@@ -76,7 +75,6 @@ public class SmackImpl implements Smack {
 
     private final ContentResolver mContentResolver;
     private final Context mContext;
-    private final User mUser;
     private ConnectionConfiguration mXMPPConfig;
     private XMPPConnection mXMPPConnection;
     private SmackListener mSmackListener;
@@ -89,7 +87,7 @@ public class SmackImpl implements Smack {
     private String mPingID;
     private long mPingTimestamp;
 
-    public SmackImpl(User user, Context context, SmackListener listener, ContentResolver contentResolver) {
+    public SmackImpl(Context context, SmackListener listener, ContentResolver contentResolver) {
         int port = PrefUtils.getPrefInt(
                 PrefUtils.PORT, PrefUtils.DEFAULT_PORT_INT);
         String server = PrefUtils.getPrefString(
@@ -119,8 +117,12 @@ public class SmackImpl implements Smack {
                     .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
         }
         this.mXMPPConnection = new XMPPConnection(mXMPPConfig);
+        SmackConfiguration.setPacketReplyTimeout(PACKET_TIMEOUT);
+        SmackConfiguration.setKeepAliveInterval(-1);
+        SmackConfiguration.setDefaultPingInterval(0);
+        registerRosterListener();// 监听联系人动态变化
+
         this.mContext = context;
-        this.mUser = user;
         this.mSmackListener = listener;
         mContentResolver = contentResolver;
     }
@@ -177,10 +179,6 @@ public class SmackImpl implements Smack {
                     Log.d(TAG, "conn.disconnect() failed: " + e);
                 }
             }
-            SmackConfiguration.setPacketReplyTimeout(PACKET_TIMEOUT);
-            SmackConfiguration.setKeepAliveInterval(-1);
-            SmackConfiguration.setDefaultPingInterval(0);
-            registerRosterListener();// 监听联系人动态变化
             mXMPPConnection.connect();
             if (!mXMPPConnection.isConnected()) {
                 throw new XMPPException("SMACK connect failed without exception!");
@@ -203,6 +201,7 @@ public class SmackImpl implements Smack {
                 }
             });
             initServiceDiscovery();// 与服务器交互消息监听,发送消息需要回执，判断是否发送成功
+
             // SMACK auto-logins if we were authenticated before
             if (!mXMPPConnection.isAuthenticated()) {
                 String ressource = PrefUtils.getPrefString(

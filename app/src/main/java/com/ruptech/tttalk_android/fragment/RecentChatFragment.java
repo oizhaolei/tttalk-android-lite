@@ -27,10 +27,6 @@ public class RecentChatFragment extends ListFragment {
     private ContentResolver mContentResolver;
     private RecentChatAdapter mRecentChatAdapter;
 
-    public static Fragment newInstance() {
-        return new RecentChatFragment();
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

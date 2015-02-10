@@ -4,8 +4,11 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
 
+import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
+import com.ruptech.tttalk_android.bus.LogoutEvent;
 import com.ruptech.tttalk_android.fragment.SettingsFragment;
+import com.squareup.otto.Subscribe;
 
 import butterknife.ButterKnife;
 
@@ -16,6 +19,7 @@ public class SettingsActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
         ButterKnife.inject(this);
+        App.mBus.register(this);
 
         String title = getString(R.string.action_settings);
         getSupportActionBar().setTitle(title);
@@ -26,4 +30,17 @@ public class SettingsActivity extends ActionBarActivity {
             transaction.commit();
         }
     }
+
+    @Subscribe
+    public void answerLogout(LogoutEvent event) {
+        finish();
+        App.saveUser(null);
+    }
+    @Override
+    protected void onDestroy() {
+        App.mBus.unregister(this);
+
+        super.onDestroy();
+    }
+
 }
