@@ -6,6 +6,7 @@ public class User extends Roster {
     String account;
     String password;
     String lang;
+    long tttalkid = 53383;
 
     public String getAccount() {
         return account;
@@ -25,6 +26,9 @@ public class User extends Roster {
 
     public String getLang() {
         return lang;
+    }
+    public long getTTTalkId() {
+        return tttalkid;
     }
 
     public void setLang(String lang) {

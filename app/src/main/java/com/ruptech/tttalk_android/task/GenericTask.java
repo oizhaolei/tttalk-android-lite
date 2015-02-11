@@ -1,6 +1,11 @@
 package com.ruptech.tttalk_android.task;
 
 import android.os.AsyncTask;
+import android.util.Log;
+
+import com.ruptech.tttalk_android.BuildConfig;
+import com.ruptech.tttalk_android.http.NetworkException;
+import com.ruptech.tttalk_android.http.ServerSideException;
 
 import java.util.Observable;
 import java.util.Observer;
@@ -47,8 +52,6 @@ public abstract class GenericTask extends AsyncTask<TaskParams, Object, TaskResu
     public Object[] getMsgs() {
         return new Object[0];
     }
-
-    public abstract void handleException(Throwable e);
 
     @Override
     protected void onCancelled() {
@@ -99,6 +102,21 @@ public abstract class GenericTask extends AsyncTask<TaskParams, Object, TaskResu
             if (getStatus() == Status.RUNNING) {
                 cancel(true);
             }
+        }
+    }
+
+    protected void handleException(Throwable e) {
+        if (BuildConfig.DEBUG)
+            Log.e(TAG, e.getMessage(), e);
+        if (e instanceof ServerSideException) {
+            msg = e.getMessage();
+            publishProgress(msg);
+        } else if (e instanceof NetworkException) {
+            msg = e.getMessage();
+            publishProgress(msg);
+        }
+        if (!(e instanceof NetworkException)) {
+//            Utils.sendClientException(e, getMsgs());
         }
     }
 }

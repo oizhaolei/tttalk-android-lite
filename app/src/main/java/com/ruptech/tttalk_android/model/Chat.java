@@ -9,6 +9,7 @@ public class Chat implements Serializable {
     protected int fromMe;
     protected int read;
     protected String jid;
+    protected long tttalkid = 48547;
     protected String message;
 
     public String getTo_content() {
@@ -73,7 +74,9 @@ public class Chat implements Serializable {
     public String getPid() {
         return pid;
     }
-
+    public long getTTTalkId() {
+        return tttalkid;
+    }
     public void setPid(String pid) {
         this.pid = pid;
     }

@@ -46,11 +46,21 @@
                 android:id="@+id/content_textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
                 android:focusable="true"
                 android:textColor="@color/color_black"
-                android:textSize="16.0sp" />
+                android:textSize="16.0sp"
+                android:text="ddddddddddddddd" />
+            <TextView
+                android:id="@+id/to_content_textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/color_yello"
+                android:textSize="16.0sp"
+                android:text="ccccccccccccccccccc"
+                android:layout_below="@+id/content_textView"
+                android:visibility="gone" />
         </RelativeLayout>
+
 
         <ImageView
             android:id="@+id/icon"

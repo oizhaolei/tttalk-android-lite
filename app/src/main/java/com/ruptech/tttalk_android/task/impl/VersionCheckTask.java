@@ -21,9 +21,4 @@ public class VersionCheckTask extends GenericTask {
         return TaskResult.OK;
     }
 
-    @Override
-    public void handleException(Throwable e) {
-
-    }
-
 }

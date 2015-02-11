@@ -25,10 +25,14 @@ import com.ruptech.tttalk_android.activity.ChatActivity;
 import com.ruptech.tttalk_android.db.ChatProvider;
 import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
 import com.ruptech.tttalk_android.model.Chat;
-import com.ruptech.tttalk_android.smack.FromLang;
-import com.ruptech.tttalk_android.smack.OriginId;
-import com.ruptech.tttalk_android.smack.TTTalkExtension;
-import com.ruptech.tttalk_android.smack.ToLang;
+import com.ruptech.tttalk_android.model.Message;
+import com.ruptech.tttalk_android.task.GenericTask;
+import com.ruptech.tttalk_android.task.TaskAdapter;
+import com.ruptech.tttalk_android.task.TaskListener;
+import com.ruptech.tttalk_android.task.TaskResult;
+import com.ruptech.tttalk_android.task.impl.RequestTranslateTask;
+import com.ruptech.tttalk_android.utils.AppPreferences;
+import com.ruptech.tttalk_android.utils.DateCommonUtils;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.utils.TimeUtil;
 import com.ruptech.tttalk_android.utils.XMPPUtils;
@@ -37,8 +41,7 @@ import org.jivesoftware.smack.packet.PacketExtension;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Date;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -50,6 +53,26 @@ public class ChatAdapter extends SimpleCursorAdapter {
     private final TranslateClient mClient;
     private ChatActivity mContext;
     private LayoutInflater mInflater;
+
+    private final TaskListener mRequestTranslateListener = new TaskAdapter() {
+
+        @Override
+        public void onPostExecute(GenericTask task, TaskResult result) {
+            RequestTranslateTask fsTask = (RequestTranslateTask) task;
+            if (result == TaskResult.OK) {
+                Log.d(TAG, "Request translate Success");
+            } else {
+                String msg = fsTask.getMsg();
+                Log.d(TAG, "Request translate fail:" + msg);
+            }
+        }
+
+        @Override
+        public void onPreExecute(GenericTask task) {
+
+        }
+
+    };
 
     public ChatAdapter(ChatActivity context, Cursor cursor, String[] from, TranslateClient client) {
         // super(context, android.R.layout.simple_list_item_1, cursor, from,
@@ -197,20 +220,34 @@ public class ChatAdapter extends SimpleCursorAdapter {
         toLang = "KR";
 
         String callback_id = chat.getPid();
-        Map<String, String> map = new HashMap <String, String>();
-//        map.put("key", "1111111");
-//        map.put("secret", "2222222");
-//        map.put("test", "true");
-//        map.put("ver", "97");
-        map.put("fromlang", fromLang);
-        map.put("tolang", toLang);
-        map.put("original_id", callback_id);
+        requestTranslate(chat, fromLang, toLang);
+    }
 
-        TTTalkExtension tttalk = new TTTalkExtension(map);
-        Log.i("test", tttalk.toXML());
-        extensions.add(tttalk);
+    public void requestTranslate(Chat chat, String from_lang, String to_lang) {
 
-        mContext.getService().sendMessage("tttalk.translator@tttalk.org", chat.getMessage(), extensions);
+        Message message = new Message();
+        long localId = System.currentTimeMillis();
+        message.setId(localId);
+        message.setMessageid(localId);
+        message.setUserid(App.readUser().getTTTalkId());
+        message.setTo_userid(2);
+        message.setFrom_lang(from_lang);
+        message.setTo_lang(to_lang);
+        message.setFrom_content(chat.getMessage());
+        message.setFrom_content_length(chat.getMessage().length());
+        message.setMessage_status(AppPreferences.MESSAGE_STATUS_BEFORE_SEND);
+        message.setStatus_text("sending");
+        message.setFile_path(null);
+        String filetype = AppPreferences.MESSAGE_TYPE_NAME_TEXT;
+        message.setFile_type(filetype);
+        String createDateStr = DateCommonUtils.getUtcDate(new Date(),
+                DateCommonUtils.DF_yyyyMMddHHmmssSSS);
+        message.create_date = createDateStr;
+        message.update_date = createDateStr;
+
+        RequestTranslateTask mRequestTranslateTask = new RequestTranslateTask(message);
+        mRequestTranslateTask.setListener(mRequestTranslateListener);
+        mRequestTranslateTask.execute();
     }
 
     static class ViewHolder {

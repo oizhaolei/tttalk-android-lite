@@ -129,6 +129,7 @@ public abstract class HttpConnection {
             String APP_SOURCE = "an-";
             String source = APP_SOURCE + App.getAppVersionCode();
             params.put("source", source);
+            params.put("loginid", "53383");
         }
         String url = ifPage;
         if (!url.startsWith("http")) {
