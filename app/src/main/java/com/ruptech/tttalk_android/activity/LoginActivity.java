@@ -175,6 +175,7 @@ public class LoginActivity extends ActionBarActivity  {
             me.setAccount(username);
             me.setPassword(password);
             me.setLang(lang);
+            me.setTTTalkId(53383);
             App.saveUser(me);
             PrefUtils.setPrefString(PrefUtils.Server, server);
 

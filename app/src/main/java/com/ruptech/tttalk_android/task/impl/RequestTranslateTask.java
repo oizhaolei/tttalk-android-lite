@@ -19,10 +19,6 @@ public class RequestTranslateTask extends GenericTask {
 
 	private boolean existTranslatedMessage;
 
-	public RequestTranslateTask(Message message) {
-		this.message = message;
-	}
-
     public RequestTranslateTask(Chat chat, String from_lang, String to_lang) {
         Message message = new Message();
         long localId = System.currentTimeMillis();
