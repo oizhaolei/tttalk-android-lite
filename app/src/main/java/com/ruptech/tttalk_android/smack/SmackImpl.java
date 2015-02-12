@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
+import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.db.ChatProvider;
 import com.ruptech.tttalk_android.db.ChatProvider.ChatConstants;
@@ -306,9 +307,22 @@ public class SmackImpl implements Smack {
 
                         String fromJID = XMPPUtils.getJabberID(msg.getFrom());
 
-                        addChatMessageToDB(ChatConstants.INCOMING, fromJID,
-                                chatMessage, ChatConstants.DS_NEW, ts,
-                                msg.getPacketID());
+                        if (fromJID.startsWith(App.properties.getProperty("translator_jid"))){
+                            Collection<PacketExtension> extensions = msg.getExtensions();
+                            for(PacketExtension ext : extensions){
+                                if (ext instanceof TTTalkExtension){
+                                    TTTalkExtension tttalkExtension =(TTTalkExtension)ext;
+                                    String messageId = tttalkExtension.getValue("message_id");
+                                    setToContent(messageId, chatMessage);
+                                }
+                            }
+
+                        }else{
+                            addChatMessageToDB(ChatConstants.INCOMING, fromJID,
+                                    chatMessage, ChatConstants.DS_NEW, ts,
+                                    msg.getPacketID());
+                        }
+
                         mSmackListener.onNewMessage(fromJID, chatMessage);
                     }
                 } catch (Exception e) {
@@ -340,6 +354,16 @@ public class SmackImpl implements Smack {
 
         mContentResolver.insert(ChatProvider.CONTENT_URI, values);
     }
+
+    public void setToContent(String messageID, String message) {
+        ContentValues cv = new ContentValues();
+        cv.put(ChatConstants.TO_MESSAGE, message);
+        Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY + "/"
+                + ChatProvider.TABLE_NAME);
+        mContentResolver.update(rowuri, cv, ChatConstants.MESSAGE_ID
+                + " = ?  " , new String[]{messageID});
+    }
+
 
     /**
      * ************** start 处理消息发送失败状态 **********************

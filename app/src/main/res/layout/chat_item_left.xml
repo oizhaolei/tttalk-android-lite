@@ -46,7 +46,8 @@
         android:background="@drawable/chat_bubble_white_selector"
         android:clickable="true"
         android:minHeight="44.0dip"
-        android:padding="10dp">
+        android:padding="10dp"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/content_textView"
@@ -54,15 +55,16 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:textColor="@color/color_black"
-            android:textSize="16.0sp" />
+            android:textSize="16.0sp"
+            android:text="aaaaaaaa" />
 
         <TextView
             android:id="@+id/to_content_textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:visibility="gone"
             android:textColor="@color/color_yello"
-            android:textSize="16.0sp" />
+            android:textSize="16.0sp"
+            android:text="dddddddddddddd" />
     </LinearLayout>
 </RelativeLayout>

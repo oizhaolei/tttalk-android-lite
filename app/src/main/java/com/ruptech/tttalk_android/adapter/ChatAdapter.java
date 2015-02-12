@@ -1,6 +1,7 @@
 package com.ruptech.tttalk_android.adapter;
 
 import android.app.AlertDialog;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.database.Cursor;
@@ -53,6 +54,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
     private final TranslateClient mClient;
     private ChatActivity mContext;
     private LayoutInflater mInflater;
+    private ContentResolver mContentResolver;
 
     private final TaskListener mRequestTranslateListener = new TaskAdapter() {
 
@@ -60,6 +62,8 @@ public class ChatAdapter extends SimpleCursorAdapter {
         public void onPostExecute(GenericTask task, TaskResult result) {
             RequestTranslateTask fsTask = (RequestTranslateTask) task;
             if (result == TaskResult.OK) {
+                Message message = fsTask.getMessage();
+                setMessageID(fsTask.getChat().getPid(), message.getMessageid());
                 Log.d(TAG, "Request translate Success");
             } else {
                 String msg = fsTask.getMsg();
@@ -74,6 +78,16 @@ public class ChatAdapter extends SimpleCursorAdapter {
 
     };
 
+    public void setMessageID(String packetID, long messageID) {
+        ContentValues cv = new ContentValues();
+        cv.put(ChatConstants.MESSAGE_ID, messageID);
+        Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY + "/"
+                + ChatProvider.TABLE_NAME);
+        mContentResolver.update(rowuri, cv, ChatConstants.PACKET_ID
+                + " = ? AND " + ChatConstants.DIRECTION + " = "
+                + ChatConstants.INCOMING, new String[]{packetID});
+    }
+
     public ChatAdapter(ChatActivity context, Cursor cursor, String[] from, TranslateClient client) {
         // super(context, android.R.layout.simple_list_item_1, cursor, from,
         // to);
@@ -81,6 +95,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
         mContext = context;
         mClient = client;
         mInflater = LayoutInflater.from(context);
+        mContentResolver = context.getContentResolver();
     }
 
     public void baiduTranslate(String content, String fromLang, String toLang) {
@@ -152,6 +167,16 @@ public class ChatAdapter extends SimpleCursorAdapter {
         CharSequence text = XMPPUtils.convertNormalStringToSpannableString(
                 mContext, chat.getMessage(), false);
         viewHolder.content.setText(text);
+        if (chat.getTo_content() != null) {
+            CharSequence to_content = XMPPUtils.convertNormalStringToSpannableString(
+                    mContext, chat.getTo_content(), false);
+            viewHolder.toContent.setText(to_content);
+            viewHolder.toContent.setVisibility(View.VISIBLE);
+        }else{
+            viewHolder.toContent.setVisibility(View.GONE);
+        }
+
+
         viewHolder.contentLayout.setTag(chat);
 
         String date = TimeUtil.getChatTime(chat.getDate());
@@ -245,7 +270,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
         message.create_date = createDateStr;
         message.update_date = createDateStr;
 
-        RequestTranslateTask mRequestTranslateTask = new RequestTranslateTask(message);
+        RequestTranslateTask mRequestTranslateTask = new RequestTranslateTask(chat, from_lang, to_lang);
         mRequestTranslateTask.setListener(mRequestTranslateListener);
         mRequestTranslateTask.execute();
     }

@@ -52,6 +52,7 @@ public class ChatActivity extends ActionBarActivity implements OnTouchListener,
             ChatProvider.ChatConstants.DIRECTION,
             ChatProvider.ChatConstants.JID, ChatProvider.ChatConstants.MESSAGE,
             ChatProvider.ChatConstants.TO_MESSAGE,
+            ChatProvider.ChatConstants.MESSAGE_ID,
             ChatProvider.ChatConstants.DELIVERY_STATUS,
             ChatConstants.PACKET_ID};// 查询字段
     // 查询联系人数据库字段

@@ -207,7 +207,8 @@ public class ChatProvider extends ContentProvider {
         Chat chat = new Chat();
         chat.setDate(cursor.getLong(cursor
                 .getColumnIndex(ChatProvider.ChatConstants.DATE)));
-
+        chat.setMessageId(cursor.getLong(cursor
+                .getColumnIndex(ChatProvider.ChatConstants.MESSAGE_ID)));
         chat.setId(cursor.getInt(cursor
                 .getColumnIndex(ChatProvider.ChatConstants._ID)));
         chat.setMessage(cursor.getString(cursor
@@ -228,7 +229,7 @@ public class ChatProvider extends ContentProvider {
     private static class ChatDatabaseHelper extends SQLiteOpenHelper {
 
         private static final String DATABASE_NAME = "chat.db";
-        private static final int DATABASE_VERSION = 7;
+        private static final int DATABASE_VERSION = 8;
 
         public ChatDatabaseHelper(Context context, SQLiteDatabase.CursorFactory cf) {
             super(context, DATABASE_NAME, cf, DATABASE_VERSION);
@@ -244,6 +245,7 @@ public class ChatProvider extends ContentProvider {
                     + ChatConstants.DIRECTION + " INTEGER," + ChatConstants.JID
                     + " TEXT," + ChatConstants.MESSAGE + " TEXT," + ChatConstants.TO_MESSAGE + " TEXT,"
                     + ChatConstants.DELIVERY_STATUS + " INTEGER,"
+                    + ChatConstants.MESSAGE_ID + " TEXT,"
                     + ChatConstants.PACKET_ID + " TEXT);");
         }
 
@@ -251,6 +253,8 @@ public class ChatProvider extends ContentProvider {
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             if (oldVersion ==6) {
                 db.execSQL("ALTER TABLE "+ TABLE_NAME +" ADD "+ ChatConstants.TO_MESSAGE + " TEXT;");
+            }else if (oldVersion == 7){
+                db.execSQL("ALTER TABLE "+ TABLE_NAME +" ADD "+ ChatConstants.MESSAGE_ID + " TEXT;");
             }
 
         }
@@ -267,6 +271,7 @@ public class ChatProvider extends ContentProvider {
         public static final String JID = "jid";
         public static final String MESSAGE = "message";
         public static final String TO_MESSAGE = "to_content";
+        public static final String MESSAGE_ID = "message_id";
         public static final String DELIVERY_STATUS = "read"; // SQLite can not
         // rename
         // columns,

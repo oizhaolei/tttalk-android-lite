@@ -11,6 +11,9 @@ public class Chat implements Serializable {
     protected String jid;
     protected long tttalkid = 48547;
     protected String message;
+    protected String to_content;
+    protected long message_id;
+    protected String pid;
 
     public String getTo_content() {
         return to_content;
@@ -20,8 +23,6 @@ public class Chat implements Serializable {
         this.to_content = to_content;
     }
 
-    protected String to_content;
-    protected String pid;
 
     public int getId() {
         return id;
@@ -79,5 +80,13 @@ public class Chat implements Serializable {
     }
     public void setPid(String pid) {
         this.pid = pid;
+    }
+
+    public long getMessageId() {
+        return message_id;
+    }
+
+    public void setMessageId(long messageId){
+        message_id = messageId;
     }
 }
