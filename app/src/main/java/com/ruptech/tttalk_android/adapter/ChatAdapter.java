@@ -20,7 +20,6 @@ import android.widget.Toast;
 import com.baidu.baidutranslate.openapi.TranslateClient;
 import com.baidu.baidutranslate.openapi.callback.ITransResultCallback;
 import com.baidu.baidutranslate.openapi.entity.TransResult;
-import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.R;
 import com.ruptech.tttalk_android.activity.ChatActivity;
 import com.ruptech.tttalk_android.db.ChatProvider;
@@ -32,8 +31,6 @@ import com.ruptech.tttalk_android.task.TaskAdapter;
 import com.ruptech.tttalk_android.task.TaskListener;
 import com.ruptech.tttalk_android.task.TaskResult;
 import com.ruptech.tttalk_android.task.impl.RequestTranslateTask;
-import com.ruptech.tttalk_android.utils.AppPreferences;
-import com.ruptech.tttalk_android.utils.DateCommonUtils;
 import com.ruptech.tttalk_android.utils.PrefUtils;
 import com.ruptech.tttalk_android.utils.TimeUtil;
 import com.ruptech.tttalk_android.utils.XMPPUtils;
@@ -42,7 +39,6 @@ import org.jivesoftware.smack.packet.PacketExtension;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -81,6 +77,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
     public void setMessageID(String packetID, long messageID) {
         ContentValues cv = new ContentValues();
         cv.put(ChatConstants.MESSAGE_ID, messageID);
+        cv.put(ChatConstants.TO_MESSAGE, "Translating...");
         Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY + "/"
                 + ChatProvider.TABLE_NAME);
         mContentResolver.update(rowuri, cv, ChatConstants.PACKET_ID
@@ -249,27 +246,6 @@ public class ChatAdapter extends SimpleCursorAdapter {
     }
 
     public void requestTranslate(Chat chat, String from_lang, String to_lang) {
-
-        Message message = new Message();
-        long localId = System.currentTimeMillis();
-        message.setId(localId);
-        message.setMessageid(localId);
-        message.setUserid(App.readUser().getTTTalkId());
-        message.setTo_userid(2);
-        message.setFrom_lang(from_lang);
-        message.setTo_lang(to_lang);
-        message.setFrom_content(chat.getMessage());
-        message.setFrom_content_length(chat.getMessage().length());
-        message.setMessage_status(AppPreferences.MESSAGE_STATUS_BEFORE_SEND);
-        message.setStatus_text("sending");
-        message.setFile_path(null);
-        String filetype = AppPreferences.MESSAGE_TYPE_NAME_TEXT;
-        message.setFile_type(filetype);
-        String createDateStr = DateCommonUtils.getUtcDate(new Date(),
-                DateCommonUtils.DF_yyyyMMddHHmmssSSS);
-        message.create_date = createDateStr;
-        message.update_date = createDateStr;
-
         RequestTranslateTask mRequestTranslateTask = new RequestTranslateTask(chat, from_lang, to_lang);
         mRequestTranslateTask.setListener(mRequestTranslateListener);
         mRequestTranslateTask.execute();

@@ -29,7 +29,7 @@ public class RequestTranslateTask extends GenericTask {
         message.setId(localId);
         message.setMessageid(localId);
         message.setUserid(App.readUser().getTTTalkId());
-        message.setTo_userid(2);
+        message.setTo_userid(0);
         message.setFrom_lang(from_lang);
         message.setTo_lang(to_lang);
         message.setFrom_content(chat.getMessage());
