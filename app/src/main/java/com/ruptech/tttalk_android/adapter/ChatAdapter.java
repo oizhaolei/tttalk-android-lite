@@ -59,7 +59,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
             RequestTranslateTask fsTask = (RequestTranslateTask) task;
             if (result == TaskResult.OK) {
                 Message message = fsTask.getMessage();
-                setMessageID(fsTask.getChat().getPid(), message.getMessageid());
+                setMessageID(fsTask.getChat().getPid(), message.getMessageid(), message.getTo_content());
                 Log.d(TAG, "Request translate Success");
             } else {
                 String msg = fsTask.getMsg();
@@ -74,10 +74,13 @@ public class ChatAdapter extends SimpleCursorAdapter {
 
     };
 
-    public void setMessageID(String packetID, long messageID) {
+    public void setMessageID(String packetID, long messageID, String to_content) {
         ContentValues cv = new ContentValues();
         cv.put(ChatConstants.MESSAGE_ID, messageID);
-        cv.put(ChatConstants.TO_MESSAGE, "Translating...");
+        if (to_content == null || to_content.length() == 0)
+            cv.put(ChatConstants.TO_MESSAGE, "Translating...");
+        else
+            cv.put(ChatConstants.TO_MESSAGE, to_content);
         Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY + "/"
                 + ChatProvider.TABLE_NAME);
         mContentResolver.update(rowuri, cv, ChatConstants.PACKET_ID
