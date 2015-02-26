@@ -105,6 +105,7 @@ public class LoginActivity extends ActionBarActivity  {
         if (App.readUser() == null) {
             mUsernameView.setText(App.properties.getProperty("test.username"));
             mPasswordView.setText(App.properties.getProperty("test.password"));
+            mLangView.setText(App.properties.getProperty("tttalk.lang"));
         } else {
             mUsernameView.setText(App.readUser().getAccount());
             mPasswordView.setText(App.readUser().getPassword());
@@ -175,7 +176,7 @@ public class LoginActivity extends ActionBarActivity  {
             me.setAccount(username);
             me.setPassword(password);
             me.setLang(lang);
-            me.setTTTalkId(53383);
+            me.setTTTalkId(Long.valueOf(App.properties.getProperty("ttalk.id")));
             App.saveUser(me);
             PrefUtils.setPrefString(PrefUtils.Server, server);
 

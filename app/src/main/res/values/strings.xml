@@ -1385,4 +1385,6 @@
     </string-array>
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
+    <string name="stop_receiving_messages">You get offline, stop receiving push message.</string>
+    <string name="start_receiving_messages">You online, you can begin to receive the news of the push.</string>
 </resources>

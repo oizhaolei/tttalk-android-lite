@@ -15,6 +15,7 @@ import com.ruptech.tttalk_android.db.RosterProvider;
 import com.ruptech.tttalk_android.db.RosterProvider.RosterConstants;
 import com.ruptech.tttalk_android.exception.XMPPException;
 import com.ruptech.tttalk_android.utils.PrefUtils;
+import com.ruptech.tttalk_android.utils.ServerUtilities;
 import com.ruptech.tttalk_android.utils.StatusMode;
 import com.ruptech.tttalk_android.utils.XMPPUtils;
 
@@ -221,6 +222,7 @@ public class SmackImpl implements Smack {
             throw new XMPPException(e.getLocalizedMessage(), e.getCause());
         }
         registerAllListener();// 注册监听其他的事件，比如新消息
+        ServerUtilities.registerOpenfirePushOnServer(mXMPPConnection.getUser());
         return mXMPPConnection.isAuthenticated();
     }
 
@@ -904,6 +906,7 @@ public class SmackImpl implements Smack {
     @Override
     public boolean logout() {
         Log.d(TAG, "unRegisterCallback()");
+        ServerUtilities.unregisterOpenfirePushOnServer();
         // remove callbacks _before_ tossing old connection
         try {
             mXMPPConnection.getRoster().removeRosterListener(mRosterListener);
@@ -928,6 +931,7 @@ public class SmackImpl implements Smack {
             }.start();
         }
         setStatusOffline();
+
         this.mSmackListener = null;
         return true;
     }
