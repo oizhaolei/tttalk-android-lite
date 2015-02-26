@@ -5,6 +5,7 @@ import android.util.Log;
 import com.github.kevinsawicki.http.HttpRequest;
 import com.ruptech.tttalk_android.App;
 import com.ruptech.tttalk_android.BuildConfig;
+import com.ruptech.tttalk_android.utils.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -156,31 +157,24 @@ public abstract class HttpConnection {
         return response;
     }
 
-
-    class Response {
-        private final String TAG = Response.class.getSimpleName();
-
-        private String body;
-
-        public Response(String body) {
-            this.body = body;
-        }
-
-        public JSONArray asJSONArray() throws RuntimeException {
-            try {
-                return new JSONArray(body);
-            } catch (Exception jsone) {
-                throw new RuntimeException(jsone.getMessage(), jsone);
-            }
-        }
-
-        public JSONObject asJSONObject() throws Exception {
-            try {
-                return new JSONObject(body);
-            } catch (JSONException jsone) {
-                throw new Exception(jsone.getMessage() + ":" + body, jsone);
-            }
-        }
+    private static String getSource() {
+        return "an-" + App.getAppVersionCode();
     }
 
+    public static Map<String, String> genParams(Map<String, String> params) {
+        if (params == null) {
+            params = new HashMap<String, String>();
+        }
+        params.put("source", getSource());
+        String loginid = null;
+        if (App.readUser() != null) {
+            loginid = String.valueOf(App.readUser().getTTTalkId());
+        }
+        if (loginid!=null) {
+            params.put("loginid", loginid);
+            String sign = Utils.genSign(params, loginid);
+            params.put("sign", sign);
+        }
+        return params;
+    }
 }

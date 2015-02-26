@@ -78,13 +78,10 @@ public class RecentChatAdapter extends SimpleCursorAdapter {
                     R.layout.item_recent_chat, parent, false);
             viewHolder = new ViewHolder(convertView);
 
-            convertView.setTag(R.mipmap.ic_launcher + (int) dateMilliseconds,
-                    viewHolder);
-            convertView.setTag(R.string.app_name, R.mipmap.ic_launcher
-                    + (int) dateMilliseconds);
+            convertView.setTag(viewHolder);
+
         } else {
-            viewHolder = (ViewHolder) convertView.getTag(R.mipmap.ic_launcher
-                    + (int) dateMilliseconds);
+            viewHolder = (ViewHolder) convertView.getTag();
         }
         viewHolder.jidView.setText(XMPPUtils.splitJidAndServer(jid));
         viewHolder.msgView.setText(XMPPUtils

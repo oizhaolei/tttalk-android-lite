@@ -223,7 +223,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
                                 baiduTranslate(chat.getMessage(), "zh", "en");
                                 break;
                             case 1://R.string.human_translate:
-                                requestTTTalkTranslate(chat, "CN", "EN");
+                                requestTTTalkTranslate(chat, "CN", "KR");
                                 break;
                             default:
                                 break;
@@ -240,10 +240,6 @@ public class ChatAdapter extends SimpleCursorAdapter {
 
     private void requestTTTalkTranslate(Chat chat, String fromLang, String toLang) {
         Collection<PacketExtension> extensions = new ArrayList<>();
-
-        fromLang = "CN";
-        toLang = "KR";
-
         String callback_id = chat.getPid();
         requestTranslate(chat, fromLang, toLang);
     }
