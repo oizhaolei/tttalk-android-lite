@@ -253,6 +253,7 @@ public class ChatProvider extends ContentProvider {
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             if (oldVersion ==6) {
                 db.execSQL("ALTER TABLE "+ TABLE_NAME +" ADD "+ ChatConstants.TO_MESSAGE + " TEXT;");
+                db.execSQL("ALTER TABLE "+ TABLE_NAME +" ADD "+ ChatConstants.MESSAGE_ID + " TEXT;");
             }else if (oldVersion == 7){
                 db.execSQL("ALTER TABLE "+ TABLE_NAME +" ADD "+ ChatConstants.MESSAGE_ID + " TEXT;");
             }
